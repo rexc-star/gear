@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>裝備計數</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E9EDF3; --panel:#F8FAFC; --panel2:#EEF2F7; --ink:#18202E; --muted:#5C6878; --line:#CDD5E0;
+  --gold:#A5761B; --blue:#2463D6; --red:#C8323F; --legend:#C27A00; --crest:#6D48C2; --set:#15876A; --white:#6E7B8C; --other:#56606E;
+  --warn-bg:#FDECEC;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121722; --panel:#1A2130; --panel2:#212A3B; --ink:#E6EAF2; --muted:#98A3B5; --line:#2E3A4F;
+    --gold:#E0B55A; --blue:#6FA2FF; --red:#FF6B76; --legend:#FFB23E; --crest:#AE8BFF; --set:#43C9A2; --white:#B9C3D0; --other:#A7B0BD;
+    --warn-bg:#3A1F25;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121722; --panel:#1A2130; --panel2:#212A3B; --ink:#E6EAF2; --muted:#98A3B5; --line:#2E3A4F;
+  --gold:#E0B55A; --blue:#6FA2FF; --red:#FF6B76; --legend:#FFB23E; --crest:#AE8BFF; --set:#43C9A2; --white:#B9C3D0; --other:#A7B0BD;
+  --warn-bg:#3A1F25;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","Noto Sans SC","Noto Sans KR","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+header{padding:18px 20px 14px;border-bottom:2px solid var(--gold);background:var(--panel);display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+header h1{margin:0;font-size:26px;font-weight:900;letter-spacing:.06em}
+header h1 small{font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:10px}
+.builds{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:18px;align-items:start}
+@media (max-width:920px){.wrap{grid-template-columns:minmax(0,1fr)}}
+html[lang="en"] .wrap,html[lang="ko"] .wrap{max-width:1420px;grid-template-columns:minmax(0,1fr) 580px}
+@media (max-width:1040px){html[lang="en"] .wrap,html[lang="ko"] .wrap{grid-template-columns:minmax(0,1fr)}}
+html[lang="en"] .slots,html[lang="ko"] .slots{grid-template-columns:repeat(auto-fill,minmax(372px,1fr))}
+html[lang="en"] .sum table,html[lang="ko"] .sum table{font-size:12.5px}
+html[lang="en"] .sum th,html[lang="en"] .sum td,html[lang="ko"] .sum th,html[lang="ko"] .sum td{padding:5px 4px}
+html[lang="en"] .sum .sub,html[lang="ko"] .sum .sub{font-size:10.5px}
+@media (max-width:460px){html[lang="en"] .slots,html[lang="ko"] .slots{grid-template-columns:minmax(0,1fr)}}
+section.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+section.box > h2{margin:0 0 10px;font-size:17px;font-weight:700;display:flex;gap:10px;align-items:center}
+section.box > h2 .swatch{width:6px;height:18px;border-radius:2px}
+.hint{color:var(--muted);font-size:13px}
+select,input[type=number],input[type=text]{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 8px;min-width:0}
+input[type=number]{width:92px;text-align:right}
+select:focus-visible,input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+button{cursor:pointer;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+button:hover{border-color:var(--gold)}
+button.primary{background:var(--gold);color:#fff;border-color:var(--gold)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid currentColor;border-radius:999px;padding:1px 10px;font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--set);color:#fff}
+.setvals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+.setvals label{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--panel2);padding:6px 10px;border-radius:6px}
+
+/* slots */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+@media (max-width:420px){.slots{grid-template-columns:minmax(0,1fr)}}
+.slot{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:10px}
+.slot-head{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.slot-head input{flex:1;font-weight:700;background:transparent;border-color:transparent}
+.slot-head input:hover{border-color:var(--line)}
+.line{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:6px;align-items:center;padding:5px 0;border-top:1px dashed var(--line)}
+.line:first-of-type{border-top:0}
+.tag{font-size:12px;font-weight:700;padding:1px 7px;border-radius:4px;color:#fff;white-space:nowrap}
+.t-blue{background:var(--blue)} .t-red{background:var(--red)} .t-legend{background:var(--legend)} .t-other{background:var(--other)}
+.line select.g{width:66px}
+.slot-head select{width:auto}
+.line input[type=number]{width:84px}
+.cap{grid-column:2 / -1;font-size:12px;color:var(--muted);margin-top:-2px}
+.cap.over{color:var(--red);font-weight:700}
+.x{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px}
+.x:hover{color:var(--red)}
+.adds{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.adds button,.adds select{font-size:13px;padding:3px 9px}
+.adds .ab-blue{color:var(--blue)} .adds .ab-red{color:var(--red)} .adds .ab-legend{color:var(--legend)}
+.empty{font-size:13px;color:var(--muted);padding:4px 0}
+
+/* summary */
+aside{position:sticky;top:env(safe-area-inset-top,0px)}
+@media (max-width:920px){aside{position:static}}
+.sum{background:var(--panel);border:2px solid var(--gold);border-radius:10px;padding:14px 14px 10px}
+.sum h2{margin:0 0 4px;font-size:18px;font-weight:900;letter-spacing:.04em}
+.legend-keys{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-bottom:8px}
+.legend-keys i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0}
+.tablewrap{overflow-x:auto;max-height:70vh;overflow-y:auto}
+@media (max-width:920px){.tablewrap{max-height:none}}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:5px 6px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{position:sticky;top:0;background:var(--panel);font-weight:500;color:var(--muted);font-size:12px}
+td.total{font-weight:900;font-size:15px}
+td.c{color:var(--crest)} td.s{color:var(--set)} td.b{color:var(--blue)} td.r{color:var(--red)} td.l{color:var(--legend)}
+td.z{color:var(--line)}
+td.w{color:var(--white)}
+.t-white{background:none;color:var(--ink);padding-left:0;padding-right:2px}
+.off{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);padding:6px 0}
+.off-toggle{display:flex;justify-content:flex-end;margin:-6px 0 4px}
+.white{display:flex;gap:6px;align-items:center;font-size:13px;margin:-2px 0 8px}
+.white input{width:70px}
+.white select{width:auto}
+.linkbtn{border:0;background:none;color:var(--gold);padding:0 4px;font-size:12px;text-decoration:underline}
+.bar{height:3px;border-radius:2px;background:var(--gold);opacity:.55;margin-top:2px}
+.sub{font-size:11px;color:var(--muted);font-weight:400}
+td.st{text-align:left;font-size:13px;font-weight:700}
+.st.over,.tally .over{color:var(--red)} .st.short,.tally .short{color:var(--legend)} .st.full,.tally .full{color:var(--set)}
+.tally{display:flex;gap:12px;font-size:13px;font-weight:700;margin-bottom:6px}
+.warns{margin-top:10px;background:var(--warn-bg);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--red)}
+.warns ul{margin:4px 0 0;padding-left:18px}
+.sumhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+.sumhead h2{margin:0}
+.btnlink{background:var(--gold);color:#fff;border-radius:6px;padding:5px 12px;text-decoration:none}
+#imgDlg{width:min(900px,94vw)}
+#gearDlg textarea{height:210px;font-family:inherit;font-size:13.5px;line-height:1.7}
+.foot{font-size:12px;color:var(--muted);margin-top:10px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:min(560px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;height:240px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+
+/* 部位顏色 */
+:root{--sc-weapon:#C2410C;--sc-helm:#0E8A8A;--sc-armor:#2563EB;--sc-boots:#8B5A2B;--sc-shield:#4F46E5;--sc-ring:#B7860B;--sc-cloak:#9333EA;--sc-other:#6B7280}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sc-weapon:#FB8A4C;--sc-helm:#3CCFCF;--sc-armor:#6FA2FF;--sc-boots:#D39A62;--sc-shield:#9A94FF;--sc-ring:#F2C14E;--sc-cloak:#C98BFF;--sc-other:#A7B0BD}}
+:root[data-theme="dark"]{--sc-weapon:#FB8A4C;--sc-helm:#3CCFCF;--sc-armor:#6FA2FF;--sc-boots:#D39A62;--sc-shield:#9A94FF;--sc-ring:#F2C14E;--sc-cloak:#C98BFF;--sc-other:#A7B0BD}
+.sc-weapon{--sc:var(--sc-weapon)} .sc-helm{--sc:var(--sc-helm)} .sc-armor{--sc:var(--sc-armor)} .sc-boots{--sc:var(--sc-boots)}
+.sc-shield{--sc:var(--sc-shield)} .sc-ring{--sc:var(--sc-ring)} .sc-cloak{--sc:var(--sc-cloak)} .sc-other{--sc:var(--sc-other)}
+.slot{border-left:6px solid var(--sc,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--sc,transparent) 12%,var(--panel2)) 0,var(--panel2) 64px)}
+.slot-head input[data-f="name"]{color:var(--sc,var(--ink))}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span id="hTitle"></span><small id="hSub"></small></h1>
+  <div class="builds">
+    <select id="langSel"></select>
+    <select id="buildSel"></select>
+    <button id="bNew"></button>
+    <button id="bDup"></button>
+    <button id="bRen"></button>
+    <button id="bDel"></button>
+    <button id="bIO"></button>
+  </div>
+</header>
+
+<div class="wrap">
+  <main>
+    <section class="box">
+      <h2><span class="swatch" style="background:var(--crest)"></span><span id="hCrest"></span></h2>
+      <div class="row" style="margin-bottom:8px">
+        <label class="row" style="gap:6px"><span id="lCls"></span> <select id="clsSel"></select></label>
+        <span class="hint" id="hClsHint"></span>
+      </div>
+      <div class="row">
+        <select id="crestSel"></select>
+        <span class="hint" id="hCrestNote"></span>
+      </div>
+      <div class="chips" id="crestChips"></div>
+    </section>
+
+    <section class="box">
+      <h2><span class="swatch" style="background:var(--set)"></span><span id="hSet"></span></h2>
+      <div class="row">
+        <select id="setSel"></select>
+        <div class="seg" id="tierSeg" role="group">
+          <button data-t="0"></button><button data-t="1"></button><button data-t="2"></button><button data-t="3"></button>
+        </div>
+      </div>
+      <div class="setvals" id="setVals"></div>
+      <p class="hint" id="setHint" style="margin:8px 0 0"></p>
+    </section>
+
+    <section class="box">
+      <h2><span class="swatch" style="background:var(--gold)"></span><span id="hEquip"></span></h2>
+      <div class="slots" id="slots"></div>
+      <div class="adds" style="margin-top:12px"><button id="addSlot"></button><button id="restoreSlots"></button><button id="clearAll"></button></div>
+    </section>
+  </main>
+
+  <aside>
+    <div class="sum">
+      <div class="sumhead"><h2 id="sumTitle"></h2><div class="row" style="gap:6px"><button id="bImg"></button><button id="bGear"></button></div></div>
+      <div class="legend-keys" id="legendKeys"></div>
+      <div class="tablewrap" id="sumTable"></div>
+      <div id="warns"></div>
+      <p class="foot" id="foot"></p>
+    </div>
+  </aside>
+</div>
+
+<dialog id="gearDlg">
+  <h3 style="margin-top:0" id="gearH"></h3>
+  <p class="hint" id="gearHint"></p>
+  <textarea id="gearText" spellcheck="false" readonly></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <span class="hint" id="gearMsg" style="margin-right:auto"></span>
+    <button id="gearCopy"></button>
+    <button id="gearImg" class="primary"></button>
+    <button id="gearClose"></button>
+  </div>
+</dialog>
+<dialog id="imgDlg">
+  <h3 style="margin-top:0" id="imgH"></h3>
+  <p class="hint" id="imgHint"></p>
+  <div style="overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:6px"><img id="imgPrev" style="display:block;max-width:100%"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <a id="imgDl" class="btnlink"></a>
+    <button id="imgClose"></button>
+  </div>
+</dialog>
+<dialog id="io">
+  <h3 style="margin-top:0" id="ioH"></h3>
+  <p class="hint" id="ioHint"></p>
+  <textarea id="ioText" spellcheck="false"></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <span class="hint" id="ioMsg" style="margin-right:auto"></span>
+    <button id="ioCopy"></button>
+    <button id="ioImport" class="primary"></button>
+    <button id="ioClose"></button>
+  </div>
+</dialog>
+
+<script>
+/* ---------- 多語 / Languages ---------- */
+const LANGS = [["zh-Hant","繁體中文"],["zh-Hans","简体中文"],["en","English"],["ko","한국어"]];
+const LI = {"zh-Hant":0,"zh-Hans":1,"en":2,"ko":3};
+const LOCALE = {"zh-Hant":"zh-TW","zh-Hans":"zh-CN","en":"en-US","ko":"ko-KR"};
+const LKEY = "eqcalc.lang";
+let LANG = (()=>{
+  try{ const v=localStorage.getItem(LKEY); if(v&&LI[v]!=null) return v; }catch(e){}
+  const n=(navigator.language||"").toLowerCase();
+  if(n.startsWith("ko")) return "ko";
+  if(n.startsWith("zh")) return /hans|-cn|-sg|-my/.test(n)?"zh-Hans":"zh-Hant";
+  if(n.startsWith("en")) return "en";
+  return "zh-Hant";
+})();
+const LX = ()=>LI[LANG];
+const pick = a => Array.isArray(a) ? (a[LX()]!=null?a[LX()]:a[0]) : a;
+
+/* 屬性名稱：[簡體, English, 한국어]；繁中用原 key */
+const ST = {
+"物攻":["物攻","Attack","포스"],"命中":["命中","Accuracy","어큐레이트"],
+"施法縮時":["施法缩时","Cast Speed","와이즈"],"集氣維持":["集气维持","Cast Duration","베어"],
+"遠攻":["远攻","Ranged","디스턴트"],"詛咒":["诅咒","Curse Time","커즈"],
+"補助":["补助","Aid Time","에이드"],"保護":["保护","Protect Time","마스킹"],
+"無視":["无视","Magic Ignore","베이직 레지스트"],"AC":["AC","AC","AC"],
+"物理回避":["物理回避","Dodge","스마트"],
+"冰抗":["冰抗","Ice Resist","레지스트 프리즈"],"毒抗":["毒抗","Poison Resist","레지스트 베넘"],
+"電抗":["电抗","Lightning Resist","레지스트 라이트닝"],"火抗":["火抗","Fire Resist","레지스트 블레이즈"],
+"麻痹抗":["麻痹抗","Paralysis Resist","레지스트 패러리시스"],"聖抗":["圣抗","Holy Resist","레지스트 홀리"],
+"全抗":["全抗","All Resist","레지스트 올"],"移動力":["移动力","Speed","스피드"],
+"HP":["HP","HP","라이프"],"MP":["MP","MP","마나"],"聖力值":["圣力值","Divine","디바인"],
+"體力":["体力","Health","헬쓰"],"回血":["回血","HP Regen","페이틀"],
+"回藍":["回蓝","MP Regen","매직"],"回綠":["回绿","Divine Regen","네이쳐"],
+"力量":["力量","Strength","스트렝스"],"敏捷":["敏捷","Dexterity","덱스터리티"],
+"體質":["体质","Constitution","컨스티튜션"],"智慧":["智慧","Wisdom","위즈덤"],
+"智力":["智力","Intelligence","인텔리전스"],"魅力":["魅力","Charisma","카리스마"],
+"耐力":["耐力","Endurance","인듀어런스"],"移動（能力值）":["移动（能力值）","Movement (stat)","무브먼트"],
+"幸運":["幸运","Lucky","럭키"],"魔法能量":["魔法能量","Wizard (WS)","위자드"],
+"神聖能量":["神圣能量","Priest (PS)","프리스트"],"法術穿透":["法术穿透","Spell Penetration","주문 관통"],
+"魔增":["魔增","Magic Vigor","매직 비거"],"聖增":["圣增","Nature Vigor","네이쳐 비거"],
+"魔持":["魔持","Magic Stay","매직 스테이"],"聖持":["圣持","Nature Stay","네이쳐 스테이"],
+"暴擊":["暴击","Critical","크리티컬"],"魔法回避":["魔法回避","Evasion","이베이젼"],
+"大奪藍":["大夺蓝","Mana Drain","위츠"],"小奪藍":["小夺蓝","Mana Steal","데블"],
+"大奪綠":["大夺绿","Divine Drain","이블"],"小奪綠":["小夺绿","Divine Steal","세이튼"],
+"大奪血":["大夺血","Life Drain","디자이어"],"小奪血":["小夺血","Life Steal","라버"],
+"大奪體":["大夺体","Health Drain","위어리"],"小奪體":["小夺体","Health Steal","패티그"],
+"小反射":["小反射","Counter","카운터어택"],"大反射":["大反射","Strike","스트라이크"],
+"麻痹":["麻痹","Paralyze","마비"],"混亂":["混乱","Confuse","혼란"],"中毒":["中毒","Poison","중독"],
+"石化":["石化","Petrify","석화"],"緩慢":["缓慢","Slow","슬로우"],"看魂":["看魂","See Ghost","영혼 보기"],
+"魔抗":["魔抗","Magic Resist","마법 저항"]
+};
+const S = n => (LANG==="zh-Hant"||!ST[n]) ? n : (ST[n][LX()-1]||n);
+
+/* 組別名稱：繁中、簡體、英文沿用原英文組名，只補韓文 */
+const GN = {
+"Force Group":"포스 그룹","Distance Group":"디스턴트 그룹","Hardest Group":"하디스트 그룹",
+"Snag Group":"스내그 그룹","Life Group":"라이프 그룹","Mana Group":"마나 그룹","Divine Group":"디바인 그룹",
+"Magic Vigor Group":"매직 비거 그룹","Nature Vigor Group":"네이쳐 비거 그룹","Rising Group":"라이징 그룹",
+"Strength Group":"스트렝스 그룹","Dexterity Group":"덱스터리티 그룹","Wizard Group":"위자드 그룹",
+"Priest Group":"프리스트 그룹","Resist Group1":"레지스트 그룹1","Resist Group2":"레지스트 그룹2",
+"Resist Group3":"레지스트 그룹3"
+};
+const GOTHER = ["其他（組別未知）","其他（组别未知）","Other (group unknown)","기타 (그룹 미상)"];
+function GNM(g){ if(g==="其他（組別未知）") return GOTHER[LX()]; return (LANG==="ko"&&GN[g])?GN[g]:g; }
+
+/* 職業 */
+const JN = {
+"至尊騎士":["至尊骑士","Supreme Knight","슈프림 나이트"],
+"狂戰士":["狂战士","CrazyWarrior","Crazy워리어"],
+"武聖":["武圣","Martial Saint","무술가"],
+"魔戰神":["魔战神","Demon God of War","전쟁의 신"],
+"聖武士":["圣武士","Paladin","팔라딘"],
+"狼牙":["狼牙","Wolf Fang","늑대 송곳니"],
+"夜鷹":["夜鹰","Nighthawk","나이트호크"],
+"俠盜":["侠盗","Rogue","도적"],
+"幻影魔盜":["幻影魔盗","Phantom Thief","유령 도둑"],
+"神逐者":["神逐者","God Chaser","갓 체이서"],
+"征服之翼":["征服之翼","Wings of Conquest","정복의 날개"],
+"浪人箭神":["浪人箭神","Ronin Archer God","로닌 궁수"],
+"神鷹之眼":["神鹰之眼","Eye of the Condor","콘도르의 눈"],
+"魔箭神":["魔箭神","Demonic Arrow God","마신화살신"],
+"神臨箭士":["神临箭士","Divine Archer","신성궁수"],
+"聖殿騎士":["圣殿骑士","Templar","기사단"],
+"墮天使":["堕天使","Fallen Angel","타락천사"],
+"神之怒":["神之怒","Wrath of God","신의 분노"],
+"聖者":["圣者","Saint","세인트"],
+"魔戰巫師":["魔战巫师","Magic War Wizard","마법전쟁 위자드"],
+"大占卜師":["大占卜师","Great Fortune Teller","대점쟁이"],
+"超法師":["超法师","Super Mage","슈퍼마법사"],
+"大賢者":["大贤者","Great Sage","대현자"]
+};
+const jobName = n => (LANG==="zh-Hant"||!JN[n]) ? n : (JN[n][LX()-1]||n);
+const CN = {
+"戰士":["战士","Warrior","전사"],"盜賊":["盗贼","Rogue","도적"],"弓箭手":["弓箭手","Archer","궁수"],
+"巫師":["巫师","Wizard","위자드"],"祭司":["祭司","Priest","프리스트"]
+};
+const clsName = c => (LANG==="zh-Hant"||!CN[c]) ? c : (CN[c][LX()-1]||c);
+
+/* 部位 */
+const POSN = {
+weapon:["武器","武器","Weapon","무기"], helm:["頭盔","头盔","Helmet","투구"],
+armor:["鎧甲","铠甲","Armor","갑옷"], boots:["靴子","靴子","Boots","신발"],
+shield:["盾牌","盾牌","Shield","방패"], ring1:["戒指 1","戒指 1","Ring 1","반지 1"],
+ring2:["戒指 2","戒指 2","Ring 2","반지 2"], cloak:["披風","披风","Cloak","망토"]
+};
+const posName = p => POSN[p] ? POSN[p][LX()] : "";
+function nameToPos(name){
+  const n=(name||"").trim(); if(!n) return null;
+  for(const p of Object.keys(POSN)) for(const v of POSN[p]) if(n===v) return p;
+  const part={weapon:["武器","Weapon","무기"],helm:["頭盔","头盔","Helmet","투구"],armor:["鎧甲","铠甲","Armor","갑옷"],
+    boots:["靴子","Boots","신발"],shield:["盾牌","Shield","방패"],ring1:["戒指","Ring","반지"],cloak:["披風","披风","Cloak","망토"]};
+  for(const p of Object.keys(part)) for(const v of part[p]) if(n.includes(v)) return p==="ring1"?null:p;
+  return null;
+}
+
+/* 介面文字：[繁中, 簡體, English, 한국어] */
+const U = {
+title:["裝備計數","装备计数","Gear Calculator","장비 계산기"],
+sub:["紋章 + 套裝 + 藍屬 / 紅屬 / 傳說 總和","纹章 + 套装 + 蓝属 / 红属 / 传说 总和","Crest + Set + Blue / High / Legend totals","문장 + 세트 + 블루 / 하이 / 레전드 합계"],
+build:["選擇配置","选择配置","Select build","빌드 선택"],
+bNew:["新配置","新配置","New","새 빌드"],
+bDup:["複製","复制","Duplicate","복제"],
+bRen:["改名","改名","Rename","이름 변경"],
+bDel:["刪除","删除","Delete","삭제"],
+bIO:["匯入 / 匯出","导入 / 导出","Import / Export","가져오기 / 내보내기"],
+lang:["語言","语言","Language","언어"],
+crestH:["紋章 G4","纹章 G4","Crest G4","문장 G4"],
+clsL:["職業類別","职业类别","Class","직업"],
+clsHint:["決定傳說屬性可以出哪些","决定传说属性可以出哪些","Sets which legend stats are available","레전드 옵션 범위를 결정합니다"],
+crestA:["紋章","纹章","Crest","문장"],
+crestNote:["可與藍屬疊加","可与蓝属叠加","Stacks on top of blue stats","블루 옵션과 중첩됩니다"],
+crestNone:["未選擇紋章","未选择纹章","No crest selected","문장을 선택하지 않음"],
+setH:["套裝加成","套装加成","Set bonus","세트 보너스"],
+setJobA:["套裝職業","套装职业","Set class","세트 직업"],
+tierA:["轉數","转数","Tier","차수"],
+t0:["無","无","None","없음"],
+t1:["一轉 G6","一转 G6","1st Dual G6","1차 듀얼 G6"],
+t2:["二轉 G7","二转 G7","2nd Dual G7","2차 듀얼 G7"],
+t3:["三轉 G8","三转 G8","3rd Dual G8","3차 듀얼 G8"],
+setPickTier:["選擇轉數後套用加成。","选择转数后套用加成。","Pick a tier to apply the bonus.","차수를 선택하면 보너스가 적용됩니다."],
+setPick:["選擇套裝職業與轉數（一轉 G6+G6、二轉 G7+G7、三轉 G8+G8）。","选择套装职业与转数（一转 G6+G6、二转 G7+G7、三转 G8+G8）。","Pick a set class and tier (1st G6+G6, 2nd G7+G7, 3rd G8+G8).","세트 직업과 차수를 선택하세요 (1차 G6+G6, 2차 G7+G7, 3차 G8+G8)."],
+setHint:["數值依藍屬等級換算，可自行修改。巫師法傷以魔增、祭司法傷以聖增計算。","数值依蓝属等级换算，可自行修改。巫师法伤以魔增、祭司法伤以圣增计算。","Values come from the blue-stat table and can be edited. Wizard damage counts as Magic Vigor, priest damage as Nature Vigor.","수치는 블루 옵션 표를 따르며 직접 수정할 수 있습니다. 위자드 피해는 매직 비거, 프리스트 피해는 네이쳐 비거로 계산합니다."],
+setNoTable:["「{0}」沒有藍屬對照，請填入實際數值。","「{0}」没有蓝属对照，请填入实际数值。","\"{0}\" has no blue-stat table; enter the real value.","\"{0}\"은(는) 블루 옵션 표가 없으므로 실제 수치를 입력하세요."],
+equipH:["裝備","装备","Equipment","장비"],
+addSlot:["新增部位","新增部位","Add slot","부위 추가"],
+restore:["補回預設部位","补回预设部位","Restore default slots","기본 부위 복구"],
+restoreOk:["預設部位都在","预设部位都在","All slots present","모두 있습니다"],
+clearAll:["清空所有裝備屬性","清空所有装备属性","Clear all stats","모든 옵션 지우기"],
+sumTitle:["屬性總和","属性总和","Stat totals","옵션 합계"],
+expImg:["匯出圖片","导出图片","Export image","이미지 내보내기"],
+expBusy:["產生中…","生成中…","Generating…","생성 중…"],
+kCrest:["紋章","纹章","Crest","문장"],
+kWhite:["白屬（白防 / 白攻 / 白血）","白属（白防 / 白攻 / 白血）","White (AC / Attack / HP)","화이트 (AC / 공격 / HP)"],
+kSet:["套裝","套装","Set","세트"],
+kBlue:["藍屬","蓝属","Blue","블루"],
+kRed:["紅屬","红属","High","하이"],
+kLegend:["傳說 / 自訂","传说 / 自定","Legend / Custom","레전드 / 사용자"],
+foot:["上限＝藍屬上限＋紋章＋白屬＋紅屬（這些可與藍屬疊加，不佔上限；套裝與傳說佔上限）；超過上限的部分不計入總計；「相當 G」用扣掉紋章、白屬、紅屬後的數值計算。藍屬 G1–G15、紅屬 H1–H15 依官方數值表；G16–G20 以 G15 到上限等分估算，與遊戲實際不同時可直接改數字。","上限＝蓝属上限＋纹章＋白属＋红属（这些可与蓝属叠加，不占上限；套装与传说占上限）；超过上限的部分不计入总计；「相当 G」用扣掉纹章、白属、红属后的数值计算。蓝属 G1–G15、红属 H1–H15 依官方数值表；G16–G20 以 G15 到上限等分估算，与游戏实际不同时可直接改数字。","Cap = blue cap + crest + white + high (these stack and do not use the cap; set and legend do). Anything over the cap is left out of the total. \"Equals\" is figured after removing crest, white and high. Blue G1–G15 and high H1–H15 follow the official tables; G16–G20 is estimated evenly from G15 to the cap, so edit any number that differs in game.","상한 = 블루 상한 + 문장 + 화이트 + 하이 (이들은 중첩되며 상한을 차지하지 않습니다. 세트와 레전드는 상한을 차지합니다). 상한을 넘는 부분은 합계에 포함되지 않습니다. '환산 G'는 문장·화이트·하이를 뺀 값으로 계산합니다. 블루 G1–G15와 하이 H1–H15는 공식 표를 따르며, G16–G20은 G15에서 상한까지 균등 추정이므로 실제와 다르면 직접 수정하세요."],
+imgH:["屬性總和圖片","属性总和图片","Stat totals image","옵션 합계 이미지"],
+imgHint:["按「下載圖片」儲存；手機可以長按圖片儲存或分享。","按「下载图片」保存；手机可以长按图片保存或分享。","Press Download to save. On a phone, long-press the image to save or share.","'이미지 저장'을 누르세요. 휴대폰에서는 이미지를 길게 눌러 저장하거나 공유할 수 있습니다."],
+imgDl:["下載圖片","下载图片","Download","이미지 저장"],
+close:["關閉","关闭","Close","닫기"],
+ioH:["匯入 / 匯出","导入 / 导出","Import / Export","가져오기 / 내보내기"],
+ioHint:["複製下方文字即可備份全部配置；貼上別人的文字後按「匯入」會取代目前所有配置。","复制下方文字即可备份全部配置；粘贴别人的文字后按「导入」会取代目前所有配置。","Copy the text below to back up every build. Pasting someone else's text and pressing Import replaces all of your builds.","아래 텍스트를 복사하면 모든 빌드를 백업할 수 있습니다. 다른 사람의 텍스트를 붙여넣고 가져오기를 누르면 현재 빌드가 모두 교체됩니다."],
+copy:["複製","复制","Copy","복사"],
+imp:["匯入","导入","Import","가져오기"],
+copied:["已複製","已复制","Copied","복사됨"],
+copyFail:["請手動複製文字","请手动复制文字","Copy the text manually","텍스트를 직접 복사하세요"],
+ioBad:["格式不正確，請貼上完整的匯出文字。","格式不正确，请粘贴完整的导出文字。","Wrong format. Paste the full exported text.","형식이 올바르지 않습니다. 내보낸 전체 텍스트를 붙여넣으세요."],
+buildN:["配置 {0}","配置 {0}","Build {0}","빌드 {0}"],
+dupSuf:["{0} 複本","{0} 副本","{0} copy","{0} 복사본"],
+renAsk:["配置名稱","配置名称","Build name","빌드 이름"],
+delAsk:["刪除「{0}」？","删除「{0}」？","Delete \"{0}\"?","\"{0}\"을(를) 삭제할까요?"],
+none:["不使用","不使用","None","사용 안 함"],
+any:["不限","不限","All","전체"],
+anyCls:["不限職業","不限职业","any class","직업 무관"],
+tagBlue:["藍","蓝","Blue","블루"],
+tagRed:["紅","红","High","하이"],
+tagLegend:["傳說","传说","Legend","레전드"],
+tagOther:["自訂","自定","Custom","사용자"],
+aStat:["屬性","属性","Stat","옵션"],
+aGrade:["等級","等级","Grade","등급"],
+aValue:["數值","数值","Value","수치"],
+aDelLine:["刪除此行","删除此行","Delete this row","이 줄 삭제"],
+aSlotName:["部位名稱","部位名称","Slot name","부위 이름"],
+aSlotKind:["部位類型","部位类型","Slot type","부위 종류"],
+aDelSlot:["刪除部位","删除部位","Delete slot","부위 삭제"],
+redCap:["紅屬上限：{0}","红属上限：{0}","High cap: {0}","하이 상한: {0}"],
+overCap:["（超過上限）","（超过上限）"," (over cap)"," (상한 초과)"],
+blueCap:["{0}｜G10 {1}・上限 {2}","{0}｜G10 {1}・上限 {2}","{0} | G10 {1} · cap {2}","{0} | G10 {1} · 상한 {2}"],
+slotMaxG:["・此部位最高 G{0}（{1}）","・此部位最高 G{0}（{1}）"," · this slot maxes at G{0} ({1})"," · 이 부위는 최대 G{0} ({1})"],
+legCap:["傳說｜{0}・{1}池","传说｜{0}・{1}池","Legend | {0} · {1} pool","레전드 | {0} · {1} 풀"],
+legNoTable:["・此屬性沒有數值表，請手動輸入","・此属性没有数值表，请手动输入"," · no value table; enter it manually"," · 수치 표 없음, 직접 입력"],
+poolW:["武器","武器","weapon","무기"],
+poolA:["防具","防具","armor","방어구"],
+notInPool:["{0}（不在此池）","{0}（不在此池）","{0} (not in this pool)","{0} (이 풀에 없음)"],
+statPH:["屬性名稱","属性名称","Stat name","옵션 이름"],
+noLines:["尚未加入屬性","尚未加入属性","No stats yet","아직 옵션이 없습니다"],
+addBlue:["＋藍屬","＋蓝属","+ Blue","+ 블루"],
+addRed:["＋紅屬","＋红属","+ High","+ 하이"],
+addLegend:["＋傳說","＋传说","+ Legend","+ 레전드"],
+addOther:["＋自訂","＋自定","+ Custom","+ 사용자"],
+noShield:["未裝備盾牌","未装备盾牌","No shield equipped","방패 미착용"],
+noShieldCls:["（{0}預設不裝盾牌）","（{0}默认不装盾牌）"," ({0} carries none by default)"," ({0} 기본 미착용)"],
+shieldOn:["裝備盾牌","装备盾牌","Equip shield","방패 착용"],
+shieldOff:["卸下盾牌","卸下盾牌","Remove shield","방패 해제"],
+cloakTag:["披風","披风","Cloak","망토"],
+cloakNone:["未選類型","未选类型","No type","종류 미선택"],
+cloakA:["披風類型","披风类型","Cloak type","망토 종류"],
+wAtk:["白攻","白攻","W.Atk","화이트 공격"],
+wHp:["白血","白血","W.HP","화이트 HP"],
+wAc:["白防","白防","W.AC","화이트 AC"],
+wRange:["範圍 {0}","范围 {0}","range {0}","범위 {0}"],
+wReset:["還原預設","还原预设","Reset","기본값 복원"],
+wDefault:["{0}預設","{0}默认","{0} default","{0} 기본값"],
+wWarrior:["戰士武器可自訂","战士武器可自定","Warrior weapon, editable","전사 무기, 직접 입력"],
+wPickCls:["先選職業類別","先选职业类别","Pick a class first","먼저 직업을 선택하세요"],
+newSlot:["新部位","新部位","New slot","새 부위"],
+delSlotAsk:["刪除「{0}」及其屬性？","删除「{0}」及其属性？","Delete \"{0}\" and its stats?","\"{0}\"와(과) 그 옵션을 삭제할까요?"],
+noLegendKind:["{0}沒有傳說屬性，要移除這個部位的 {1} 條傳說屬性嗎？","{0}没有传说属性，要移除这个部位的 {1} 条传说属性吗？","{0} has no legend stats. Remove the {1} legend stat(s) on this slot?","{0}에는 레전드 옵션이 없습니다. 이 부위의 레전드 옵션 {1}개를 제거할까요?"],
+clearAsk:["清空此配置所有裝備上的屬性？","清空此配置所有装备上的属性？","Clear every stat on this build?","이 빌드의 모든 옵션을 지울까요?"],
+sumEmpty:["選擇紋章、套裝，或在裝備上加入屬性後，總和會顯示在這裡。","选择纹章、套装，或在装备上加入属性后，总和会显示在这里。","Pick a crest or set, or add stats to a slot, and the totals appear here.","문장이나 세트를 선택하거나 부위에 옵션을 추가하면 합계가 표시됩니다."],
+noCapData:["無上限資料","无上限资料","No cap data","상한 자료 없음"],
+capBlue:["藍 {0}","蓝 {0}","Blue {0}","블루 {0}"],
+capCrest:[" + 紋章 {0}"," + 纹章 {0}"," + crest {0}"," + 문장 {0}"],
+capWhite:[" + 白屬 {0}"," + 白属 {0}"," + white {0}"," + 화이트 {0}"],
+capRed:[" + 紅 {0}"," + 红 {0}"," + high {0}"," + 하이 {0}"],
+belowG1:["未達 G1","未达 G1","below G1","G1 미만"],
+stOver:["超出 {0}","超出 {0}","Over by {0}","{0} 초과"],
+stOverSub:["超出部分不計","超出部分不计","excess not counted","초과분 미반영"],
+stFull:["已滿","已满","At cap","상한 도달"],
+stShort:["差 {0}","差 {0}","Short {0}","{0} 부족"],
+stShortG:["差 {0} G","差 {0} G","{0} G to go","{0} G 남음"],
+nOver:["{0} 項超出","{0} 项超出","{0} over cap","{0}개 초과"],
+nShort:["{0} 項未滿","{0} 项未满","{0} under cap","{0}개 미달"],
+nFull:["{0} 項已滿","{0} 项已满","{0} at cap","{0}개 도달"],
+thStat:["屬性","属性","Stat","옵션"],
+thTotal:["總計","总计","Total","합계"],
+thCap:["上限","上限","Cap","상한"],
+thEq:["相當","相当","Equals","환산"],
+thState:["狀態","状态","Status","상태"],
+thCrest:["紋章","纹章","Crest","문장"],
+thWhite:["白屬","白属","White","화이트"],
+thSet:["套裝","套装","Set","세트"],
+thBlue:["藍","蓝","Blue","블루"],
+thRed:["紅","红","High","하이"],
+thLegend:["傳說","传说","Legend","레전드"],
+warnH:["注意：","注意：","Note:","주의:"],
+warnBlue:["{0}：藍屬 {1} {2} 超過此部位上限","{0}：蓝属 {1} {2} 超过此部位上限","{0}: blue {1} {2} is over this slot's cap","{0}: 블루 {1} {2}이(가) 이 부위 상한을 초과"],
+warnRed:["{0}：紅屬 {1} {2} 超過上限 {3}","{0}：红属 {1} {2} 超过上限 {3}","{0}: high {1} {2} is over the cap of {3}","{0}: 하이 {1} {2}이(가) 상한 {3}을(를) 초과"],
+imgCrest:["紋章：{0}","纹章：{0}","Crest: {0}","문장: {0}"],
+imgSet:["套裝：{0}","套装：{0}","Set: {0}","세트: {0}"],
+imgEmpty:["尚未有任何屬性","尚未有任何属性","No stats yet","옵션이 없습니다"],
+imgFile:["屬性總和","属性总和","stat-totals","옵션합계"],
+sec:["秒","秒","s","초"],
+expGear:["匯出裝備","导出装备","Export gear","장비 내보내기"],
+gearH:["裝備清單","装备清单","Gear list","장비 목록"],
+gearHint:["按「複製」貼到聊天室或論壇，按「下載圖片」存成圖片。","按「复制」粘贴到聊天室或论坛，按「下载图片」存成图片。","Copy the text to paste into chat, or save it as an image.","텍스트를 복사해 채팅에 붙여넣거나 이미지로 저장하세요."],
+gearSet:["套裝","套装","Set","세트"],
+gearOff:["未裝備","未装备","Not equipped","미착용"],
+gearFile:["裝備清單","装备清单","gear-list","장비목록"],
+dlImg:["下載圖片","下载图片","Download image","이미지 저장"]
+};
+function t(k){
+  let s=pick(U[k]); if(s==null) return k;
+  for(let i=1;i<arguments.length;i++) s=s.split("{"+(i-1)+"}").join(arguments[i]);
+  return s;
+}
+
+/* ---------- 藍屬（依組別） ---------- */
+// [英文, 計算屬性, G10 數值, 上限值]
+/* ---------- 藍屬數值表（G1–G15，官方） ---------- */
+const L = (a,b,st)=>Array.from({length:15},(_,i)=>a+st*i);
+const T_HIT=[3,7,13,21,25,28,31,33,35,37,39,41,42,43,44];
+const T_REC=[3,6,12,19,21,23,28,33,37,41,44,47,50,52,55];
+const T_ATTR=[3,7,14,25,28,33,38,43,48,53,58,63,68,73,78];
+const T_STAY=[16,32,48,76,104,136,156,172,188,204,220,236,248,264,280];
+const T_S22=[2,3,5,7,9,12,15,17,19,22,24,25,26,27,28];
+const T_B105=[10,15,24,34,43,58,72,82,91,105,115,120,125,129,134];
+const T_POOL=[30,70,140,250,280,330,380,430,480,530,580,630,680,730,780];
+const T_RES=L(4,0,4);
+const T_SNAG=[3,5,7,10,13,15,17,19,20,21];
+// 屬性：[數值表, 上限]
+const BV = {
+ "物攻":[L(10,0,10),200], "命中":[T_HIT,37],
+ "施法縮時":[[3,6,12,19,23,28,33,37,41,44,47,47,52,55,57].map(v=>-v),-50],
+ "集氣維持":[[3,6,12,19,23,28,33,37,41,44,47,50,52,55,57],44],
+ "遠攻":[[6,11,16,21,26,29,33,37,40,43,46,49,51,52,54],86],
+ "詛咒":[[8,16,24,38,52,68,78,86,94,102,110,118,124,132,140],204],
+ "補助":[T_STAY,408], "保護":[[10,20,32,50,68,90,104,114,124,136,146,156,164,176,186],272],
+ "無視":[[2,4,7,12,14,16,20,24,28,32,36,40,44,48,52],32],
+ "AC":[[6,11,17,22,28,33,39,44,50,55,61,66,72,77,83],110], "物理回避":[T_HIT,37],
+ "冰抗":[T_RES,80],"毒抗":[T_RES,80],"電抗":[T_RES,80],"火抗":[T_RES,80],"麻痹抗":[T_RES,80],"聖抗":[T_RES,80],"全抗":[T_RES,40],
+ "移動力":[[4,8,11,15,19,23,26,30,34,38,55,60,65,70,75],38],
+ "HP":[[1752,2856,3948,5052,6144,7236,8340,9432,10536,11628,12720,13824,14916,16020,17124],11628],
+ "MP":[T_POOL,1060], "聖力值":[T_POOL,1060],
+ "體力":[[23,32,42,53,65,77,87,96,104,112,119,126,131,131,131],224],
+ "回血":[T_REC,41],"回藍":[T_REC,41],"回綠":[T_REC,41],
+ "力量":[T_ATTR,106],"敏捷":[T_ATTR,106],"體質":[T_ATTR,106],"智慧":[T_ATTR,106],"智力":[T_ATTR,106],"魅力":[T_ATTR,106],"耐力":[T_ATTR,106],"移動（能力值）":[T_ATTR,106],"幸運":[T_ATTR,106],"魔法能量":[T_ATTR,106],"神聖能量":[T_ATTR,106],
+ "法術穿透":[L(1,0,2).map((v,i)=>i===0?1:i*2),18],
+ "魔增":[L(12,0,12),240],"聖增":[L(12,0,12),240],"魔持":[T_STAY,408],"聖持":[T_STAY,408],
+ "暴擊":[[2,4,8,12,16,20,24,28,32,36,40,44,46,48,50],36], "魔法回避":[T_HIT,37],
+ "大奪藍":[T_B105,105],"小奪藍":[T_S22,22],"大奪綠":[T_B105,105],"小奪綠":[T_S22,22],
+ "大奪血":[[18,27,45,63,82,109,136,155,173,200,219,228,237,246,255],200],"小奪血":[T_S22,22],
+ "大奪體":[[1,2,4,6,7,10,13,15,17,19,21,23,24,26,28],19],"小奪體":[[2,3,5,7,9,12,15,17,19,22,24,26,28,30,32],22],
+ "小反射":[T_REC,41],"大反射":[[27,54,91,127,173,209,255,301,337,374,401,428,456,474,502],374],
+ "麻痹":[T_SNAG,21],"混亂":[T_SNAG,21],"中毒":[T_SNAG,21],"石化":[T_SNAG,21],"緩慢":[T_SNAG,21]
+};
+const GROUPS = [
+ ["force","Force Group",[["force","物攻"],["accurate","命中"],["weary","大奪體"],["desire","大奪血"]]],
+ ["distant","Distance Group",[["distant","遠攻"],["critical","暴擊"],["fatigue","小奪體"],["robber","小奪血"]]],
+ ["hardest","Hardest Group",[["hardest","AC"],["smart","物理回避"],["strike","大反射"],["counter attack","小反射"]]],
+ ["snag","Snag Group",[["snag","麻痹"],["vertigly","混亂"],["poison","中毒"],["stiff","石化"],["slack","緩慢"]]],
+ ["life","Life Group",[["life","HP"],["fatal","回血"],["health","體力"],["speed","移動力"]]],
+ ["mana","Mana Group",[["mana","MP"],["magic","回藍"],["wise","施法縮時"],["bear","集氣維持"]]],
+ ["divine","Divine Group",[["divine","聖力值"],["nature","回綠"],["wise","施法縮時"],["bear","集氣維持"]]],
+ ["mv","Magic Vigor Group",[["magic vigor","魔增"],["magic stay","魔持"],["speed","移動力"]]],
+ ["nv","Nature Vigor Group",[["nature vigor","聖增"],["nature stay","聖持"],["speed","移動力"]]],
+ ["curse","Rising Group",[["curse","詛咒"],["aid","補助"],["masking","保護"],["basic resist","無視"]]],
+ ["str","Strength Group",[["strength","力量"],["endurance","耐力"],["constitution","體質"]]],
+ ["dex","Dexterity Group",[["dexterity","敏捷"],["constitution","體質"],["movement","移動（能力值）"]]],
+ ["int","Wizard Group",[["intelligence","智力"],["wizard","魔法能量"],["devil","小奪藍"],["witch","大奪藍"]]],
+ ["wis","Priest Group",[["wisdom","智慧"],["priest","神聖能量"],["evil","大奪綠"],["satan","小奪綠"],["ghost","看魂"]]],
+ ["ice","Resist Group1",[["resist freeze","冰抗"],["resist all","全抗"],["evasion","魔法回避"],["resist venom","毒抗"]]],
+ ["elec","Resist Group2",[["resist lighting","電抗"],["resist all","全抗"],["evasion","魔法回避"],["resist paralysis","麻痹抗"]]],
+ ["fire","Resist Group3",[["resist blaze","火抗"],["resist all","全抗"],["evasion","魔法回避"],["resist holy","聖抗"]]],
+ ["other","其他（組別未知）",[["charisma","魅力"],["lucky","幸運"],["spell penetration","法術穿透"]]]
+];
+const E = {}; const BY_STAT = {}; const BLUE_ORDER = [];
+GROUPS.forEach(([gid,gname,list])=>list.forEach(([en,stat])=>{
+  const id=gid+"."+en.replace(/\s+/g,"_");
+  const bv=BV[stat], vals=bv?bv[0]:null, max=bv?bv[1]:1;
+  const n=vals?vals.length:1, last=vals?vals[n-1]:1;
+  // 數值表到 G15 仍未到上限且還在成長 → 以 G15 到上限等分延伸到 G20
+  const grow = vals && n===15 && Math.abs(last)<Math.abs(max) && vals[14]!==vals[13];
+  const maxG = vals? (grow?20:n) : 1;
+  E[id]={id,gid,gname,en,stat,vals,g10:vals?vals[Math.min(9,n-1)]:1,max,maxG,n};
+  if(!BY_STAT[stat]) BY_STAT[stat]=E[id];
+  if(!BLUE_ORDER.includes(stat)) BLUE_ORDER.push(stat);
+}));
+function eVal(e,g){
+  if(!e.vals) return 1;
+  if(g<=e.n) return e.vals[g-1];
+  const last=e.vals[e.n-1];
+  return Math.round((last+(e.max-last)*(g-e.n)/(20-e.n))*100)/100;
+}
+const LEG_G = 8, LEG_MAXG = 10;
+function legVal(stat,g){ const e=BY_STAT[stat]; return e? eVal(e,g) : null; }
+function newLegend(stat){ const v=legVal(stat,LEG_G); return {type:"legend",stat,g:LEG_G,value:v==null?0:v}; }
+/* ---------- 紅屬 HIGH 數值表（H1–H15） ---------- */
+const P = (arr)=>arr.concat(Array(15-arr.length).fill(arr[arr.length-1]));
+const RV = {
+ "物攻":[L(5,0,5),60], "AC":[[3,6,9,11,14,17,20,22,25,28,31,33,36,39,42],33],
+ "HP":[[876,1428,1974,2526,3072,3618,4170,4716,5268,5814,6360,6912,7458,8010,8562],6912],
+ "魔增":[L(6,0,6),72], "聖增":[L(6,0,6),72], "全抗":[L(1,0,1),12],
+ "無視":[P([1,2,4,6,7,8]),8], "暴擊":[P([1,2,4,6,8,10]),10], "遠攻":[P([3,6,8,11,13,15]),13],
+ "大奪血":[P([9,14,26,32,41,55]),55], "小奪血":[P([1,2,3,4,5,6]),6],
+ "物理回避":[P([2,4,7,10,13,15]),15], "魔法回避":[P([2,4,7,10,13,15]),15], "命中":[P([2,4,7,10,13,15]),15],
+ "移動力":[P([2,4,6,8,10,12]),12], "大反射":[P([13,27,46,64,87,105]),105], "小反射":[P([1,3,5,7,10,12]),12],
+ "聖力值":[P([14,31,62,111,124,146]),146], "MP":[P([14,31,62,111,124,146]),146]
+};
+const RED = Object.fromEntries(Object.entries(RV).map(([k,v])=>[k,v[1]]));
+function rVal(stat,h){ const r=RV[stat]; return r? r[0][Math.min(h,15)-1] : 0; }
+function rCapH(stat){ const r=RV[stat]; if(!r) return 1; const i=r[0].findIndex(v=>v>=r[1]); return i<0?15:i+1; }
+function newRed(stat){ const h=rCapH(stat); return {type:"red",stat,h,value:rVal(stat,h)}; }
+const EXTRA = ["魔抗"];
+const PCT = new Set(["命中","遠攻","物理回避","回血","回藍","回綠","施法縮時","集氣維持","魔持","聖持","無視","魔法回避"]);
+const SEC = new Set(["麻痹","混亂","中毒","石化","緩慢","詛咒","補助","保護"]);
+/* 舊名稱 → 新名稱 */
+const RENAME = {"攻奪":"大奪血","血奪":"小奪血","物反":"大反射","血反":"小反射","速度":"移動力","施法":"施法縮時","減速":"緩慢","偷取健康":"大奪體","盾牌魔法穿透":"法術穿透","魔傷":"魔增","聖傷":"聖增","聖力":"聖力值","魔力":"MP"};
+const ALL = [...BLUE_ORDER];
+for (const k of Object.keys(RED)) if(!ALL.includes(k)) ALL.push(k);
+for (const k of EXTRA) if(!ALL.includes(k)) ALL.push(k);
+const ORDER = Object.fromEntries(ALL.map((n,i)=>[n,i]));
+
+const JOBS = [
+ {g:"戰士",list:[
+  ["至尊騎士","Lord Knight",{AC:28,物攻:50},["物攻","AC"]],
+  ["狂戰士","Swashbuckler",{物攻:50,移動力:19},["物攻","移動力"]],
+  ["武聖","War Master",{命中:25,大奪血:82},["物攻","命中"]],
+  ["魔戰神","Blade Singer",{魔抗:20,物攻:50},["物攻","暴擊"]],
+  ["聖武士","Paladin",{物理回避:25,物攻:50},["物攻","魔法回避"]]]},
+ {g:"盜賊",list:[
+  ["狼牙","Corsair",{AC:28,物攻:50},["物攻","AC"]],
+  ["夜鷹","Nighthawk",{命中:25,大奪血:82},["物攻","命中"]],
+  ["俠盜","Vigilante",{物攻:50,遠攻:26},["物攻","遠攻"]],
+  ["幻影魔盜","Toreador",{魔抗:10,物攻:50},["物攻","暴擊"]],
+  ["神逐者","Revenant",{物理回避:25,物攻:50},["物攻","魔法回避"]]]},
+ {g:"弓箭手",list:[
+  ["征服之翼","Conqueror",{AC:28,物攻:50},["物攻","AC"]],
+  ["浪人箭神","Desperado",{物攻:50,遠攻:26},["物攻","遠攻"]],
+  ["神鷹之眼","Hawkeye",{命中:25,大奪血:82},["物攻","命中"]],
+  ["魔箭神","Trigger Mage",{魔抗:10,物攻:50},["物攻","暴擊"]],
+  ["神臨箭士","Warsaint",{物理回避:25,物攻:50},["物攻","魔法回避"]]]},
+ {g:"巫師",list:[
+  ["魔戰巫師","Warlock",{AC:28,魔增:60},["魔增","AC"]],
+  ["大占卜師","Tzigane",{移動力:19,魔增:60},["魔增","移動力"]],
+  ["超法師","Archmage",{AC:28,物理回避:25},["魔增","物理回避"]],
+  ["大賢者","Grand Wizard",{魔增:60,法術穿透:8},["魔增","無視"]]]},
+ {g:"祭司",list:[
+  ["聖殿騎士","Templar",{AC:28,HP:6144},["AC","HP"]],
+  ["墮天使","Fallen",{AC:28,移動力:19},["AC","移動力"]],
+  ["神之怒","Avenger",{AC:28,物理回避:25},["AC","魔法回避"]],
+  ["聖者","Saint",{AC:28,施法縮時:-23},["AC","聖增"]]]}
+];
+const LNAME = {"攻擊":"物攻","物理攻击":"物攻","遠攻":"遠攻","物理反射":"大反射","物理奪取":"大奪血","魔法迴避":"魔法回避","血量反射":"小反射","血量奪取":"小奪血","命中":"命中","魔法抗性":"魔抗","暴擊":"暴擊","物理迴避":"物理回避","物理防御":"AC","移動":"移動力","巫師法傷":"魔增","祭司法傷":"聖增","魔法無視":"無視","血量":"HP","輔助加持":"補助","保護加持":"保護","施法加速":"施法縮時"};
+const LEGEND = {
+ "戰士":{w:["攻擊"],a:["物理反射","物理奪取","魔法迴避","血量反射","血量奪取","命中","魔法抗性","暴擊","物理迴避","物理防御","移動"]},
+ "盜賊":{w:["攻擊","遠攻"],a:["物理奪取","血量奪取","魔法迴避","暴擊","魔法抗性","物理迴避","命中","物理防御","遠攻","移動"]},
+ "弓箭手":{w:["攻擊","遠攻"],a:["物理奪取","血量奪取","魔法迴避","暴擊","魔法抗性","物理迴避","命中","物理防御","遠攻","移動"]},
+ "巫師":{w:["巫師法傷","魔法無視"],a:["魔法無視","物理防御","物理迴避","血量","輔助加持","保護加持","移動","巫師法傷"]},
+ "祭司":{w:["施法加速","祭司法傷","魔法無視","物理攻击"],a:["物理反射","血量反射","魔法抗性","魔法迴避","物理迴避","移動","施法加速","物理防御","輔助加持","保護加持","血量","祭司法傷","魔法無視"]}
+};
+const JOB = {}, JOBCLASS = {};
+JOBS.forEach(g=>g.list.forEach(([n,en,st,set])=>{JOB[n]={n,en,st,set};JOBCLASS[n]=g.g;}));
+const TIER_G = {1:6,2:7,3:8};
+/* 紋章：有數值表的屬性取 G4；魔抗沒有數值表，照原資料 */
+const CREST_G = 4;
+function crestStats(j){ const o={}; for(const [k,v] of Object.entries(j.st)){ o[k] = BV[k]? BV[k][0][CREST_G-1] : v; } return o; }
+/* 白防（各職業防具基本 AC，可與藍屬疊加） */
+const WHITE_AC = {
+ "弓箭手":{helm:13,armor:36,boots:0,shield:0},
+ "戰士":{weapon:0,helm:13,armor:41,boots:0,shield:41},
+ "盜賊":{helm:13,armor:36,boots:0,shield:34},
+ "祭司":{helm:13,armor:36,boots:2,shield:34},
+ "巫師":{helm:13,armor:36,boots:2,shield:31}
+};
+const WPOS = ["weapon","helm","armor","boots","shield"];
+function whitePos(s){ const p=s.pos||nameToPos(s.name); return WPOS.includes(p)? p : null; }
+const CLOAK = {atk:{ac:10,atk:48,range:"30–48"}, def:{ac:24}, hp:{ac:10,hp:5000}};
+const CLOAKN = {atk:["攻披","攻披","Attack Cloak","공격 망토"],def:["防披","防披","Defense Cloak","방어 망토"],hp:["血披","血披","HP Cloak","체력 망토"]};
+const cloakName = k => CLOAKN[k] ? CLOAKN[k][LX()] : "";
+const isCloak = s => slotKind(s)==="c";
+function whiteAtk(s){ const c=CLOAK[s.cloak]; if(!isCloak(s)||!c||!c.atk) return 0; return s.watk!=null? s.watk : c.atk; }
+function whiteHP(s){ const c=CLOAK[s.cloak]; return (isCloak(s)&&c&&c.hp)? c.hp : 0; }
+function whiteShown(s){ if(isCloak(s)) return !!CLOAK[s.cloak]; const pos=whitePos(s); if(pos==="weapon") return B().cls==="戰士"; return !!pos || s.wac!=null; }
+function whiteAuto(s){ if(isCloak(s)) return CLOAK[s.cloak]?CLOAK[s.cloak].ac:0; const t=WHITE_AC[B().cls], pos=whitePos(s); return (t&&pos&&t[pos]!=null)? t[pos] : 0; }
+const NO_SHIELD = ["祭司","巫師"];
+function isShield(s){ return whitePos(s)==="shield"; }
+function slotOn(s){ if(!isShield(s)) return true; return s.on!=null ? s.on : !NO_SHIELD.includes(B().cls); }
+function whiteAC(s){ if(!whiteShown(s)) return 0; return (s.wac!=null) ? s.wac : whiteAuto(s); }
+const KINDN = {w:["武器","武器","Weapon","무기"],a:["防具","防具","Armor","방어구"],r:["戒指","戒指","Ring","반지"],c:["披風","披风","Cloak","망토"]};
+const KINDS = {w:99,a:99,r:3,c:3};
+const kindName = k => KINDN[k][LX()];
+const DEFAULT_SLOTS = [["weapon","w"],["helm","a"],["armor","a"],["boots","a"],["shield","a"],["ring1","r"],["ring2","r"],["cloak","c"]];
+const slotKind = s => s.kind || "a";
+const slotCap = s => KINDS[slotKind(s)];
+const hasLegend = s => ["w","a"].includes(slotKind(s));
+const gradeMax = (e,s) => Math.min(e.maxG, slotCap(s));
+const slotName = s => s.name || posName(s.pos) || t("newSlot");
+
+/* ---------- 工具 ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const unit = s=>PCT.has(s)?"%":SEC.has(s)?t("sec"):"";
+function fmt(n){ if(!isFinite(n)) return "0"; const r=Math.round(n*100)/100; return r.toLocaleString(LOCALE[LANG],{maximumFractionDigits:2}); }
+function statOpts(list,sel){ return list.map(s=>`<option value="${esc(s)}" ${s===sel?"selected":""}>${esc(S(s))}</option>`).join(""); }
+function blueOpts(sel){
+  return GROUPS.map(([gid,gname,list])=>`<optgroup label="${esc(GNM(gname))}">${list.map(([en])=>{const id=gid+"."+en.replace(/\s+/g,"_");const e=E[id];return `<option value="${id}" ${id===sel?"selected":""}>${esc(S(e.stat))}　${esc(en)}</option>`;}).join("")}</optgroup>`).join("");
+}
+
+/* ---------- 狀態 ---------- */
+const KEY="eqcalc.v2";
+function newBuild(name){ return {name, cls:"", crest:"", setJob:"", setTier:0, setVals:[null,null], slots:DEFAULT_SLOTS.map(([p,k])=>({pos:p,kind:k,lines:[]}))}; }
+let store;
+try{ store = JSON.parse(localStorage.getItem(KEY)); }catch(e){ store=null; }
+if(!store || !Array.isArray(store.builds) || !store.builds.length) store={builds:[newBuild(t("buildN",1))],cur:0};
+if(store.cur>=store.builds.length) store.cur=0;
+store.builds.forEach(b=>{ (b.slots||[]).forEach(sl=>{
+  if(!sl.pos){ const p=nameToPos(sl.name); if(p) sl.pos=p; }
+  if(sl.pos && sl.name && POSN[sl.pos] && POSN[sl.pos].includes(sl.name)) delete sl.name;
+  sl.lines=(sl.lines||[]).filter(l=>l.type!=="blue"||E[l.id]);
+}); });
+store.builds.forEach(b=>b.slots.forEach(sl=>sl.lines.forEach(l=>{ if(l.type==="blue"){ if(E[l.id]) l.value=eVal(E[l.id],Math.min(l.g||1,E[l.id].maxG)); } else { if(RENAME[l.stat]) l.stat=RENAME[l.stat]; if(l.type==="red"&&RV[l.stat]&&!l.h){ const vs=RV[l.stat][0]; let h=vs.findIndex(v=>v>=l.value); l.h=h<0?15:h+1; l.value=vs[l.h-1]; } if(l.type==="legend"&&!l.g){ l.g=LEG_G; const v=legVal(l.stat,LEG_G); if(v!=null&&!l.value) l.value=v; } } })));
+const B = ()=>store.builds[store.cur];
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
+
+/* ---------- 語言 ---------- */
+function applyStatic(){
+  document.documentElement.lang = LANG;
+  document.title = t("title");
+  $("#hTitle").textContent = t("title");
+  $("#hSub").textContent = t("sub");
+  $("#buildSel").setAttribute("aria-label",t("build"));
+  $("#langSel").setAttribute("aria-label",t("lang"));
+  $("#bNew").textContent=t("bNew"); $("#bDup").textContent=t("bDup");
+  $("#bRen").textContent=t("bRen"); $("#bDel").textContent=t("bDel"); $("#bIO").textContent=t("bIO");
+  $("#hCrest").textContent=t("crestH");
+  $("#lCls").textContent=t("clsL"); $("#clsSel").setAttribute("aria-label",t("clsL"));
+  $("#hClsHint").textContent=t("clsHint");
+  $("#crestSel").setAttribute("aria-label",t("crestA"));
+  $("#hCrestNote").textContent=t("crestNote");
+  $("#hSet").textContent=t("setH");
+  $("#setSel").setAttribute("aria-label",t("setJobA"));
+  $("#tierSeg").setAttribute("aria-label",t("tierA"));
+  ["t0","t1","t2","t3"].forEach((k,i)=>{ document.querySelector(`#tierSeg [data-t="${i}"]`).textContent=t(k); });
+  $("#hEquip").textContent=t("equipH");
+  $("#addSlot").textContent=t("addSlot"); $("#restoreSlots").textContent=t("restore"); $("#clearAll").textContent=t("clearAll");
+  $("#bImg").textContent=t("expImg");
+  $("#bGear").textContent=t("expGear");
+  $("#gearH").textContent=t("gearH"); $("#gearHint").textContent=t("gearHint");
+  $("#gearCopy").textContent=t("copy"); $("#gearImg").textContent=t("dlImg"); $("#gearClose").textContent=t("close");
+  $("#legendKeys").innerHTML=[["--crest","kCrest"],["--white","kWhite"],["--set","kSet"],["--blue","kBlue"],["--red","kRed"],["--legend","kLegend"]]
+    .map(([v,k])=>`<span><i style="background:var(${v})"></i>${esc(t(k))}</span>`).join("");
+  $("#foot").textContent=t("foot");
+  $("#imgH").textContent=t("imgH"); $("#imgHint").textContent=t("imgHint");
+  $("#imgPrev").alt=t("imgH"); $("#imgDl").textContent=t("imgDl"); $("#imgClose").textContent=t("close");
+  $("#ioH").textContent=t("ioH"); $("#ioHint").textContent=t("ioHint");
+  $("#ioCopy").textContent=t("copy"); $("#ioImport").textContent=t("imp"); $("#ioClose").textContent=t("close");
+}
+function renderLang(){ $("#langSel").innerHTML = LANGS.map(([v,n])=>`<option value="${v}" ${v===LANG?"selected":""}>${n}</option>`).join(""); }
+$("#langSel").onchange=e=>{ LANG=e.target.value; try{ localStorage.setItem(LKEY,LANG); }catch(_){ } renderAll(); };
+
+/* ---------- 配置列 ---------- */
+function renderBuilds(){
+  $("#buildSel").innerHTML = store.builds.map((b,i)=>`<option value="${i}" ${i===store.cur?"selected":""}>${esc(b.name)}</option>`).join("");
+  $("#bDel").disabled = store.builds.length<2;
+}
+$("#buildSel").onchange=e=>{store.cur=+e.target.value;save();renderAll();};
+$("#bNew").onclick=()=>{store.builds.push(newBuild(t("buildN",store.builds.length+1)));store.cur=store.builds.length-1;save();renderAll();};
+$("#bDup").onclick=()=>{const c=JSON.parse(JSON.stringify(B()));c.name=t("dupSuf",c.name);store.builds.push(c);store.cur=store.builds.length-1;save();renderAll();};
+$("#bRen").onclick=()=>{const n=prompt(t("renAsk"),B().name);if(n&&n.trim()){B().name=n.trim();save();renderAll();}};
+$("#bDel").onclick=()=>{if(store.builds.length<2)return;if(!confirm(t("delAsk",B().name)))return;store.builds.splice(store.cur,1);store.cur=Math.max(0,store.cur-1);save();renderAll();};
+
+/* ---------- 職業 / 紋章 ---------- */
+function jobSelect(sel){
+  const cls=B().cls;
+  return `<option value="">${esc(t("none"))}</option>`+JOBS.filter(g=>!cls||g.g===cls).map(g=>`<optgroup label="${esc(clsName(g.g))}">${g.list.map(([n,en])=>`<option value="${esc(n)}" ${n===sel?"selected":""}>${esc(LANG==="en"?jobName(n):LANG==="ko"?jobName(n):jobName(n)+" "+en)}</option>`).join("")}</optgroup>`).join("");
+}
+function renderCls(){ $("#clsSel").innerHTML=`<option value="">${esc(t("any"))}</option>`+Object.keys(LEGEND).map(c=>`<option value="${esc(c)}" ${c===B().cls?"selected":""}>${esc(clsName(c))}</option>`).join(""); }
+function resetShield(){ B().slots.forEach(sl=>{ if(isShield(sl)) delete sl.on; }); }
+$("#clsSel").onchange=e=>{B().cls=e.target.value;resetShield();
+  const c=B().cls; if(c){ if(B().crest&&JOBCLASS[B().crest]!==c) B().crest=""; if(B().setJob&&JOBCLASS[B().setJob]!==c){ B().setJob=""; B().setVals=[null,null]; } }
+  renderCrest(); renderSet();save();renderSlots();renderSummary();};
+function renderCrest(){
+  $("#crestSel").innerHTML = jobSelect(B().crest);
+  const j=JOB[B().crest];
+  $("#crestChips").innerHTML = j ? Object.entries(crestStats(j)).map(([k,v])=>`<span class="chip" style="color:var(--crest)">${esc(S(k))} ${v>0?"+":""}${fmt(v)}${unit(k)}</span>`).join("") : `<span class="hint">${esc(t("crestNone"))}</span>`;
+}
+$("#crestSel").onchange=e=>{B().crest=e.target.value;if(JOBCLASS[B().crest]&&B().cls!==JOBCLASS[B().crest]){B().cls=JOBCLASS[B().crest];resetShield();}save();renderCls();renderCrest();renderSlots();renderSummary();};
+
+/* ---------- 套裝 ---------- */
+function setAuto(stat,tier){ const e=BY_STAT[stat]; return e? eVal(e,TIER_G[tier]) : 0; }
+function renderSet(){
+  const b=B();
+  $("#setSel").innerHTML = jobSelect(b.setJob);
+  document.querySelectorAll("#tierSeg button").forEach(x=>x.setAttribute("aria-pressed", String(+x.dataset.t===b.setTier)));
+  const j=JOB[b.setJob];
+  if(!j||!b.setTier){ $("#setVals").innerHTML=""; $("#setHint").textContent = j? t("setPickTier") : t("setPick"); return; }
+  $("#setVals").innerHTML = j.set.map((s,i)=>{
+    const v = b.setVals[i]==null ? setAuto(s,b.setTier) : b.setVals[i];
+    return `<label><span>${esc(S(s))} <span class="hint">G${TIER_G[b.setTier]}</span></span><span><input type="number" step="any" class="num" data-sv="${i}" value="${v}">${unit(s)}</span></label>`;
+  }).join("");
+  const unknown = j.set.filter(s=>!BY_STAT[s]);
+  let h = t("setHint");
+  if(unknown.length) h += t("setNoTable",unknown.map(S).join("、"));
+  $("#setHint").textContent=h;
+}
+$("#setSel").onchange=e=>{B().setJob=e.target.value;B().setVals=[null,null];save();renderSet();renderSummary();};
+$("#tierSeg").onclick=e=>{const t2=e.target.closest("button");if(!t2)return;B().setTier=+t2.dataset.t;B().setVals=[null,null];save();renderSet();renderSummary();};
+$("#setVals").oninput=e=>{const i=e.target.dataset.sv;if(i==null)return;const v=parseFloat(e.target.value);B().setVals[+i]=isNaN(v)?0:v;save();renderSummary();};
+
+/* ---------- 裝備 ---------- */
+const TYPE = {blue:["tagBlue","t-blue"],red:["tagRed","t-red"],legend:["tagLegend","t-legend"],other:["tagOther","t-other"]};
+function legendPool(si){
+  const b=B(), pool=LEGEND[b.cls];
+  if(!pool) return ALL.map(s=>[s,S(s)]);
+  const seen=new Set(), out=[];
+  for(const n of pool[slotKind(b.slots[si])==="w"?"w":"a"]){ const st=LNAME[n]; if(seen.has(st)) continue; seen.add(st);
+    out.push([st, LANG==="zh-Hant" ? (n===st?n:`${n}（${st}）`) : S(st)]); }
+  return out;
+}
+function legendOpts(si,sel){
+  const p=legendPool(si); if(sel && !p.some(x=>x[0]===sel)) p.push([sel,t("notInPool",S(sel))]);
+  return p.map(([v,txt])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(txt)}</option>`).join("");
+}
+function blueCapInfo(l,slot){
+  const e=E[l.id], gm=gradeMax(e,slot), m=eVal(e,gm);
+  const over = Math.abs(l.value)>Math.abs(m)+1e-9;
+  const txt = t("blueCap",GNM(e.gname),fmt(e.g10)+unit(e.stat),fmt(e.max)+unit(e.stat))
+    +(slotCap(slot)<e.maxG? t("slotMaxG",gm,fmt(m)) : "")+(over?t("overCap"):"");
+  return {over,txt};
+}
+function lineHTML(l,si,li){
+  const slot=B().slots[si], d=`data-s="${si}" data-l="${li}"`;
+  let statCtl, gradeCtl="<span></span>", cap="";
+  const stat = l.type==="blue"? E[l.id].stat : l.stat;
+  if(l.type==="blue"){
+    const e=E[l.id], gm=gradeMax(e,slot);
+    statCtl=`<select ${d} data-f="id" aria-label="${esc(t("aStat"))}">${blueOpts(l.id)}</select>`;
+    gradeCtl=`<select class="g" ${d} data-f="g" aria-label="${esc(t("aGrade"))}">${Array.from({length:gm},(_,i)=>`<option value="${i+1}" ${l.g===i+1?"selected":""}>G${i+1}</option>`).join("")}</select>`;
+    const c=blueCapInfo(l,slot); cap=`<div class="cap ${c.over?"over":""}">${esc(c.txt)}</div>`;
+  } else if(l.type==="red"){
+    statCtl=`<select ${d} data-f="stat" aria-label="${esc(t("aStat"))}">${statOpts(Object.keys(RED),l.stat)}</select>`;
+    gradeCtl=`<select class="g" ${d} data-f="h" aria-label="${esc(t("aGrade"))}">${Array.from({length:15},(_,i)=>`<option value="${i+1}" ${l.h===i+1?"selected":""}>H${i+1}</option>`).join("")}</select>`;
+    const m=RED[l.stat], over=l.value>m;
+    cap=`<div class="cap ${over?"over":""}">${esc(t("redCap",fmt(m)+unit(l.stat))+(over?t("overCap"):""))}</div>`;
+  } else if(l.type==="legend"){
+    statCtl=`<select ${d} data-f="stat" aria-label="${esc(t("aStat"))}">${legendOpts(si,l.stat)}</select>`;
+    gradeCtl=`<select class="g" ${d} data-f="g" aria-label="${esc(t("aGrade"))}">${Array.from({length:LEG_MAXG},(_,i)=>`<option value="${i+1}" ${l.g===i+1?"selected":""}>G${i+1}</option>`).join("")}</select>`;
+    cap=`<div class="cap">${esc(t("legCap",B().cls?clsName(B().cls):t("anyCls"),slotKind(slot)==="w"?t("poolW"):t("poolA"))+(BY_STAT[l.stat]?"":t("legNoTable")))}</div>`;
+  } else {
+    statCtl=`<input type="text" ${d} data-f="stat" value="${esc(l.stat)}" placeholder="${esc(t("statPH"))}" aria-label="${esc(t("statPH"))}">`;
+  }
+  return `<div class="line"><span class="tag ${TYPE[l.type][1]}">${esc(t(TYPE[l.type][0]))}</span>${statCtl}${gradeCtl}<span class="num"><input type="number" step="any" ${d} data-f="value" value="${l.value}" aria-label="${esc(t("aValue"))}">${unit(stat)}</span><button class="x" ${d} data-act="del" aria-label="${esc(t("aDelLine"))}">×</button>${cap}</div>`;
+}
+function slotColor(s){
+  const p=s.pos||nameToPos(s.name);
+  const m={weapon:"sc-weapon",helm:"sc-helm",armor:"sc-armor",boots:"sc-boots",shield:"sc-shield",ring1:"sc-ring",ring2:"sc-ring",cloak:"sc-cloak"}[p];
+  if(m) return m;
+  return {w:"sc-weapon",r:"sc-ring",c:"sc-cloak"}[slotKind(s)]||"sc-other";
+}
+function renderSlots(){
+  const b=B();
+  $("#slots").innerHTML = b.slots.map((s,si)=>`
+    <div class="slot ${slotColor(s)}">
+      <div class="slot-head">
+        <input type="text" value="${esc(slotName(s))}" data-s="${si}" data-f="name" aria-label="${esc(t("aSlotName"))}">
+        <select data-s="${si}" data-f="kind" data-prev="${slotKind(s)}" aria-label="${esc(t("aSlotKind"))}">${Object.keys(KINDS).map(k=>`<option value="${k}" ${slotKind(s)===k?"selected":""}>${esc(kindName(k))}${KINDS[k]<99?"（≤G"+KINDS[k]+"）":""}</option>`).join("")}</select>
+        <button class="x" data-s="${si}" data-act="delslot" aria-label="${esc(t("aDelSlot"))}" title="${esc(t("aDelSlot"))}">×</button>
+      </div>
+      ${!slotOn(s)?`<div class="off"><span>${esc(t("noShield")+(NO_SHIELD.includes(B().cls)&&s.on==null?t("noShieldCls",clsName(B().cls)):""))}</span><button data-s="${si}" data-act="shieldon">${esc(t("shieldOn"))}</button></div>`:`
+      ${isShield(s)?`<div class="off-toggle"><button class="linkbtn" data-s="${si}" data-act="shieldoff">${esc(t("shieldOff"))}</button></div>`:""}
+      ${isCloak(s)?`<div class="white"><span class="tag t-white">${esc(t("cloakTag"))}</span><select data-s="${si}" data-f="cloak" aria-label="${esc(t("cloakA"))}"><option value="" ${!CLOAK[s.cloak]?"selected":""}>${esc(t("cloakNone"))}</option>${Object.keys(CLOAK).map(k=>`<option value="${k}" ${s.cloak===k?"selected":""}>${esc(cloakName(k))}</option>`).join("")}</select></div>`:""}
+      ${whiteShown(s)&&whiteAtk(s)?`<div class="white"><span class="tag t-white">${esc(t("wAtk"))}</span> ${esc(S("物攻"))} <input type="number" step="any" class="num" data-s="${si}" data-f="watk" value="${whiteAtk(s)}" aria-label="${esc(t("wAtk"))}"><span class="hint">${esc(t("wRange",CLOAK.atk.range))}</span></div>`:""}
+      ${whiteShown(s)&&whiteHP(s)?`<div class="white"><span class="tag t-white">${esc(t("wHp"))}</span> ${esc(S("HP"))} +${fmt(whiteHP(s))}</div>`:""}
+      ${whiteShown(s)?`<div class="white"><span class="tag t-white">${esc(t("wAc"))}</span> AC <input type="number" step="any" class="num" data-s="${si}" data-f="wac" value="${whiteAC(s)}" aria-label="${esc(t("wAc"))}">${s.wac!=null?`<button class="linkbtn" data-s="${si}" data-act="wacauto">${esc(t("wReset"))}</button>`:`<span class="hint">${esc(isCloak(s)?t("wDefault",cloakName(s.cloak)):whitePos(s)==="weapon"?t("wWarrior"):(B().cls?t("wDefault",clsName(B().cls)):t("wPickCls")))}</span>`}</div>`:""}
+      ${s.lines.length? s.lines.map((l,li)=>lineHTML(l,si,li)).join("") : `<div class="empty">${esc(t("noLines"))}</div>`}
+      <div class="adds">
+        <button class="ab-blue" data-s="${si}" data-add="blue">${esc(t("addBlue"))}</button>
+        <button class="ab-red" data-s="${si}" data-add="red">${esc(t("addRed"))}</button>
+        ${hasLegend(s)?`<button class="ab-legend" data-s="${si}" data-add="legend">${esc(t("addLegend"))}</button>`:""}
+        <button data-s="${si}" data-add="other">${esc(t("addOther"))}</button>
+      </div>`}
+    </div>`).join("");
+}
+function newBlue(id,slot){ const e=E[id], g=gradeMax(e,slot); return {type:"blue",id,g,value:eVal(e,g)}; }
+const slotsEl=$("#slots");
+slotsEl.addEventListener("click",e=>{
+  const el=e.target.closest("button"); if(!el) return;
+  const b=B(), si=+el.dataset.s, slot=b.slots[si];
+  if(el.dataset.add){
+    const ty=el.dataset.add;
+    if(ty==="blue") slot.lines.push(newBlue("force.force",slot));
+    else if(ty==="red") slot.lines.push(newRed("物攻"));
+    else if(ty==="legend") slot.lines.push(newLegend(legendPool(si)[0][0]));
+    else slot.lines.push({type:"other",stat:"",value:0});
+  } else if(el.dataset.act==="wacauto"){ delete slot.wac; }
+  else if(el.dataset.act==="shieldon"){ slot.on=true; }
+  else if(el.dataset.act==="shieldoff"){ slot.on=false; }
+  else if(el.dataset.act==="del"){ slot.lines.splice(+el.dataset.l,1); }
+  else if(el.dataset.act==="delslot"){ if(slot.lines.length && !confirm(t("delSlotAsk",slotName(slot)))) return; b.slots.splice(si,1); }
+  else return;
+  save(); renderSlots(); renderSummary();
+});
+slotsEl.addEventListener("change",e=>{
+  const el=e.target; if(el.tagName!=="SELECT") return;
+  const slot=B().slots[+el.dataset.s], f=el.dataset.f;
+  if(f==="cloak"){ slot.cloak=el.value; delete slot.wac; delete slot.watk; save(); renderSlots(); renderSummary(); return; }
+  if(f==="kind"){
+    slot.kind=el.value;
+    if(!hasLegend(slot)){ const n=slot.lines.filter(l=>l.type==="legend").length; if(n&&!confirm(t("noLegendKind",kindName(slot.kind),n))){ slot.kind=el.dataset.prev||"a"; renderSlots(); return; } slot.lines=slot.lines.filter(l=>l.type!=="legend"); }
+    slot.lines.forEach(l=>{ if(l.type==="blue"){ const gm=gradeMax(E[l.id],slot); if(l.g>gm){ l.g=gm; l.value=eVal(E[l.id],gm);} } });
+  } else {
+    const l=slot.lines[+el.dataset.l];
+    if(l.type==="blue"){
+      if(f==="id"){ l.id=el.value; l.g=Math.min(l.g,gradeMax(E[l.id],slot)); }
+      if(f==="g") l.g=+el.value;
+      l.value=eVal(E[l.id],l.g);
+    } else if(l.type==="legend"){
+      if(f==="stat") l.stat=el.value;
+      if(f==="g") l.g=+el.value;
+      const v=legVal(l.stat,l.g); if(v!=null) l.value=v;
+    } else if(l.type==="red"){
+      if(f==="stat"){ l.stat=el.value; l.h=Math.min(l.h||rCapH(l.stat),rCapH(l.stat)); }
+      if(f==="h") l.h=+el.value;
+      l.value=rVal(l.stat,l.h);
+    } else if(f==="stat"){ l.stat=el.value; }
+  }
+  save(); renderSlots(); renderSummary();
+});
+slotsEl.addEventListener("input",e=>{
+  const el=e.target; if(el.tagName!=="INPUT") return;
+  const slot=B().slots[+el.dataset.s];
+  if(el.dataset.f==="name"){
+    const v=el.value;
+    if(slot.pos && (v===posName(slot.pos) || v==="")) delete slot.name; else slot.name=v;
+    save(); const card=el.closest(".slot"); card.className="slot "+slotColor(slot); return;
+  }
+  if(el.dataset.f==="watk"){ const v=parseFloat(el.value); slot.watk=isNaN(v)?0:v; save(); renderSummary(); return; }
+  if(el.dataset.f==="wac"){ const v=parseFloat(el.value); slot.wac=isNaN(v)?0:v; save(); renderSummary(); return; }
+  const l=slot.lines[+el.dataset.l];
+  if(el.dataset.f==="value"){ const v=parseFloat(el.value); l.value=isNaN(v)?0:v;
+    const cap=el.closest(".line").querySelector(".cap");
+    if(cap && l.type==="blue"){ const c=blueCapInfo(l,slot); cap.classList.toggle("over",c.over); cap.textContent=c.txt; }
+    if(cap && l.type==="red"){ const m=RED[l.stat], over=l.value>m; cap.classList.toggle("over",over); cap.textContent=t("redCap",fmt(m)+unit(l.stat))+(over?t("overCap"):""); }
+  }
+  if(el.dataset.f==="stat") l.stat=el.value;
+  save(); renderSummary();
+});
+$("#restoreSlots").onclick=()=>{
+  const b=B(), have=new Set(b.slots.map(x=>x.pos).filter(Boolean)), missing=DEFAULT_SLOTS.filter(([p])=>!have.has(p));
+  if(!missing.length){ const bt=$("#restoreSlots"); bt.textContent=t("restoreOk"); setTimeout(()=>bt.textContent=t("restore"),1500); return; }
+  const out=[]; DEFAULT_SLOTS.forEach(([p,k])=>{ const ex=b.slots.find(x=>x.pos===p); out.push(ex||{pos:p,kind:k,lines:[]}); });
+  b.slots.forEach(x=>{ if(!out.includes(x)) out.push(x); });
+  b.slots=out; save(); renderSlots(); renderSummary();
+};
+$("#addSlot").onclick=()=>{B().slots.push({name:t("newSlot"),kind:"a",lines:[]});save();renderSlots();};
+$("#clearAll").onclick=()=>{if(!confirm(t("clearAsk")))return;B().slots.forEach(s=>s.lines=[]);save();renderSlots();renderSummary();};
+
+/* ---------- 總和 ---------- */
+function renderSummary(){
+  const b=B(), T={}, warns=[];
+  const add=(stat,col,v)=>{ if(!stat||!v) return; (T[stat] ||= {c:0,w:0,s:0,b:0,r:0,l:0}); T[stat][col]+=v; };
+  const j=JOB[b.crest]; if(j) for(const [k,v] of Object.entries(crestStats(j))) add(k,"c",v);
+  const sj=JOB[b.setJob];
+  if(sj&&b.setTier) sj.set.forEach((s,i)=>add(s,"s", b.setVals[i]==null?setAuto(s,b.setTier):b.setVals[i]));
+  const act=b.slots.filter(slotOn);
+  act.forEach(s=>{ add("AC","w",whiteAC(s)); add("物攻","w",whiteAtk(s)); add("HP","w",whiteHP(s)); });
+  act.forEach(s=>s.lines.forEach(l=>{
+    if(l.type==="blue"){
+      add(E[l.id].stat,"b",l.value);
+      const c=blueCapInfo(l,s); if(c.over) warns.push(t("warnBlue",slotName(s),S(E[l.id].stat),fmt(l.value)));
+      return;
+    }
+    const col={red:"r",legend:"l",other:"l"}[l.type];
+    add(l.type==="other"?(l.stat||"").trim():l.stat,col,l.value);
+    if(l.type==="red"&&l.value>RED[l.stat]) warns.push(t("warnRed",slotName(s),S(l.stat),fmt(l.value),fmt(RED[l.stat])));
+  }));
+  $("#sumTitle").textContent = `${t("sumTitle")}　${b.name}`;
+  const keys=Object.keys(T).sort((a,c)=>(ORDER[a]??999)-(ORDER[c]??999)||a.localeCompare(c));
+  if(!keys.length){ $("#sumTable").innerHTML=`<p class="hint">${esc(t("sumEmpty"))}</p>`; }
+  else {
+    const cell=(v,cls)=>`<td class="num ${v?cls:"z"}">${v?fmt(v):"–"}</td>`;
+    let nOver=0,nShort=0,nFull=0;
+    const rows=keys.map(k=>{const r=T[k],tot=r.c+r.w+r.s+r.b+r.r+r.l, u=unit(k), e=BY_STAT[k];
+      let totCell=`<td class="num total">${fmt(tot)}${u}</td>`, capCell=`<td class="num z">–</td>`, eqCell=`<td class="num z">–</td>`, stCell=`<td class="z">${esc(t("noCapData"))}</td>`;
+      if(e && e.vals){
+        const cap=e.max+r.c+r.w+r.r, a=Math.abs(tot-r.c-r.w-r.r), ac=Math.abs(e.max);
+        let capG=e.maxG; for(let g=1;g<=e.maxG;g++){ if(Math.abs(eVal(e,g))>=ac-1e-9){ capG=g; break; } }
+        let eq=0; for(let g=1;g<=e.maxG;g++){ if(Math.abs(eVal(e,g))<=a+1e-9) eq=g; else break; }
+        const sub=(r.c||r.w||r.r)? t("capBlue",fmt(e.max)+u)+(r.c?t("capCrest",fmt(r.c)+u):"")+(r.w?t("capWhite",fmt(r.w)):"")+(r.r?t("capRed",fmt(r.r)+u):"") : "G"+capG;
+        capCell=`<td class="num">${fmt(cap)}${u}<div class="sub">${esc(sub)}</div></td>`;
+        eqCell=`<td class="num">${eq?"G"+eq:esc(t("belowG1"))}</td>`;
+        if(a>ac+1e-9){ nOver++; totCell=`<td class="num total">${fmt(cap)}${u}</td>`; stCell=`<td class="st over">${esc(t("stOver",fmt(a-ac)+u))}<div class="sub">${esc(t("stOverSub"))}</div></td>`; }
+        else if(Math.abs(a-ac)<1e-9){ nFull++; stCell=`<td class="st full">${esc(t("stFull"))}</td>`; }
+        else { nShort++; stCell=`<td class="st short">${esc(t("stShort",fmt(ac-a)+u))}<div class="sub">${esc(t("stShortG",capG-eq))}</div></td>`; }
+      }
+      return `<tr><td>${esc(S(k))}</td>${totCell}${capCell}${eqCell}${stCell}${cell(r.c,"c")}${cell(r.w,"w")}${cell(r.s,"s")}${cell(r.b,"b")}${cell(r.r,"r")}${cell(r.l,"l")}</tr>`;}).join("");
+    const th=["thStat","thTotal","thCap","thEq","thState","thCrest","thWhite","thSet","thBlue","thRed","thLegend"].map(k=>`<th>${esc(t(k))}</th>`).join("");
+    $("#sumTable").innerHTML=`<div class="tally">${nOver?`<span class="over">${esc(t("nOver",nOver))}</span>`:""}${nShort?`<span class="short">${esc(t("nShort",nShort))}</span>`:""}${nFull?`<span class="full">${esc(t("nFull",nFull))}</span>`:""}</div><table><thead><tr>${th}</tr></thead><tbody>${rows}    </tbody></table>`;
+  }
+  $("#warns").innerHTML = warns.length? `<div class="warns">${esc(t("warnH"))}<ul>${warns.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>` : "";
+}
+
+/* ---------- 匯入匯出 ---------- */
+const dlg=$("#io");
+$("#bIO").onclick=()=>{$("#ioText").value=JSON.stringify(store);$("#ioMsg").textContent="";dlg.showModal();};
+$("#ioClose").onclick=()=>dlg.close();
+$("#ioCopy").onclick=async()=>{const ta=$("#ioText");ta.select();try{await navigator.clipboard.writeText(ta.value);$("#ioMsg").textContent=t("copied");}catch(e){try{document.execCommand("copy");$("#ioMsg").textContent=t("copied");}catch(_){$("#ioMsg").textContent=t("copyFail");}}};
+$("#ioImport").onclick=()=>{try{const d=JSON.parse($("#ioText").value);if(!Array.isArray(d.builds)||!d.builds.length)throw 0;store={builds:d.builds,cur:Math.min(d.cur||0,d.builds.length-1)};save();location.reload();}catch(e){$("#ioMsg").textContent=t("ioBad");}};
+
+/* ---------- 匯出圖片 ---------- */
+const dlP = (window.claude && window.claude.use) ? window.claude.use("downloads").catch(()=>null) : Promise.resolve(null);
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||"#000"; }
+function cellInfo(td){
+  const sub=td.querySelector(".sub"); let main=td.textContent;
+  if(sub) main=main.slice(0,main.length-sub.textContent.length);
+  return {main:main.trim(), sub:sub?sub.textContent.trim():"", cls:td.className};
+}
+async function makeSummaryImage(){
+  try{ await document.fonts.ready; }catch(e){}
+  const b=B(), FONT='"Noto Sans TC","Noto Sans SC","Noto Sans KR","PingFang TC","Microsoft JhengHei",sans-serif';
+  const C={bg:cssv("--panel"),ink:cssv("--ink"),muted:cssv("--muted"),line:cssv("--line"),gold:cssv("--gold"),
+    c:cssv("--crest"),w:cssv("--white"),s:cssv("--set"),b:cssv("--blue"),r:cssv("--red"),l:cssv("--legend"),over:cssv("--red"),short:cssv("--legend"),full:cssv("--set")};
+  const table=document.querySelector("#sumTable table");
+  const head = table? [...table.tHead.rows[0].cells].map(c=>c.textContent) : [];
+  const rows = table? [...table.tBodies[0].rows].map(tr=>[...tr.cells].map(cellInfo)) : [];
+  const crest = JOB[b.crest]? `${jobName(b.crest)} G${CREST_G}` : t("none");
+  const set = (JOB[b.setJob]&&b.setTier)? `${jobName(b.setJob)} ${t("t"+b.setTier)}` : t("none");
+  const tally = document.querySelector("#sumTable .tally")? [...document.querySelectorAll("#sumTable .tally span")].map(s=>({t:s.textContent,col:C[s.className]||C.ink})) : [];
+  const cv=document.createElement("canvas"), x=cv.getContext("2d"), S2=2, PAD=28;
+  const f=(w,sz)=>`${w} ${sz}px ${FONT}`;
+  x.font=f(700,15); const colW=head.map((h,i)=>{ let w=x.measureText(h).width;
+    rows.forEach(r=>{ x.font=f(i===1?900:500,15); w=Math.max(w,x.measureText(r[i].main).width); x.font=f(400,12); w=Math.max(w,x.measureText(r[i].sub).width); }); return Math.ceil(w)+22; });
+  const tableW=colW.reduce((a,c)=>a+c,0);
+  const W=Math.max(tableW+PAD*2,560);
+  const rowH=rows.map(r=>r.some(c=>c.sub)?46:32);
+  const H=PAD+34+28+(tally.length?28:0)+10+32+rowH.reduce((a,c)=>a+c,0)+PAD+26;
+  cv.width=W*S2; cv.height=H*S2; x.scale(S2,S2);
+  x.fillStyle=C.bg; x.fillRect(0,0,W,H);
+  x.fillStyle=C.gold; x.fillRect(0,0,W,5);
+  let y=PAD+22; x.textBaseline="alphabetic";
+  x.fillStyle=C.ink; x.font=f(900,22); x.fillText(`${t("sumTitle")}　${b.name}`,PAD,y);
+  y+=28; x.font=f(500,14); x.fillStyle=C.c; const ct=t("imgCrest",crest); x.fillText(ct,PAD,y);
+  const cw=x.measureText(ct).width; x.fillStyle=C.s; x.fillText(t("imgSet",set),PAD+cw+24,y);
+  if(tally.length){ y+=26; let tx=PAD; x.font=f(700,14); tally.forEach(tt=>{ x.fillStyle=tt.col; x.fillText(tt.t,tx,y); tx+=x.measureText(tt.t).width+18; }); }
+  y+=14;
+  if(!rows.length){ x.fillStyle=C.muted; x.font=f(400,14); x.fillText(t("imgEmpty"),PAD,y+24); }
+  else{
+    let cx=PAD; x.font=f(500,12); x.fillStyle=C.muted;
+    head.forEach((h,i)=>{ const w=colW[i]; if(i===0||i===4){x.textAlign="left";x.fillText(h,cx+6,y+20);} else {x.textAlign="right";x.fillText(h,cx+w-6,y+20);} cx+=w; });
+    y+=32; x.strokeStyle=C.gold; x.lineWidth=1.5; x.beginPath(); x.moveTo(PAD,y-4); x.lineTo(PAD+tableW,y-4); x.stroke();
+    rows.forEach((r,ri)=>{
+      const h=rowH[ri]; cx=PAD;
+      r.forEach((c,i)=>{
+        const w=colW[i]; let col=C.ink, wt=500;
+        if(i===1) wt=900;
+        if(i===4){ col=/over/.test(c.cls)?C.over:/short/.test(c.cls)?C.short:/full/.test(c.cls)?C.full:C.muted; wt=700; }
+        if(i>=5){ const k=(c.cls.match(/\b([cwsbrl])\b/)||[])[1]; col=c.main==="–"?C.line:(C[k]||C.ink); }
+        if(i===2||i===3) col=c.main==="–"?C.line:C.ink;
+        const left=(i===0||i===4); x.textAlign=left?"left":"right"; const tx=left?cx+6:cx+w-6;
+        x.fillStyle=col; x.font=f(wt,15); x.fillText(c.main,tx,y+20);
+        if(c.sub){ x.fillStyle=C.muted; x.font=f(400,12); x.fillText(c.sub,tx,y+37); }
+        cx+=w;
+      });
+      y+=h; x.strokeStyle=C.line; x.lineWidth=1; x.beginPath(); x.moveTo(PAD,y-4); x.lineTo(PAD+tableW,y-4); x.stroke();
+    });
+  }
+  x.textAlign="left"; x.fillStyle=C.muted; x.font=f(400,11);
+  x.fillText(`${t("title")}　${new Date().toLocaleString(LOCALE[LANG])}`,PAD,H-PAD+10);
+  return await new Promise(res=>cv.toBlob(res,"image/png"));
+}
+const imgDlg=document.getElementById("imgDlg");
+let lastImgUrl=null;
+const safeName = s2 => String(s2).replace(/[\\/:*?"<>|\s]+/g,"_");
+async function offerImage(blob,name,title){
+  const dl=await dlP;
+  if(dl){
+    try{ await dl.save({filename:name,data:blob}); return; }
+    catch(e){ if(e&&(e.code==="declined"||e.code==="rate_limited")) return; }
+  }
+  if(lastImgUrl) URL.revokeObjectURL(lastImgUrl);
+  lastImgUrl=URL.createObjectURL(blob);
+  $("#imgH").textContent=title;
+  document.getElementById("imgPrev").src=lastImgUrl;
+  const a=document.getElementById("imgDl"); a.href=lastImgUrl; a.download=name;
+  imgDlg.showModal();
+}
+document.getElementById("bImg").onclick=async()=>{
+  const btn=document.getElementById("bImg"); btn.disabled=true; btn.textContent=t("expBusy");
+  try{
+    const blob=await makeSummaryImage();
+    await offerImage(blob,`${t("imgFile")}_${safeName(B().name)}.png`,t("imgH"));
+  } finally { btn.disabled=false; btn.textContent=t("expImg"); }
+};
+document.getElementById("imgClose").onclick=()=>imgDlg.close();
+
+/* ---------- 匯出裝備（套裝名稱 + 各部位類型） ---------- */
+function gearRows(){
+  const b=B(), rows=[];
+  const sj=JOB[b.setJob];
+  rows.push([t("gearSet"), (sj&&b.setTier)? `${jobName(b.setJob)} ${t("t"+b.setTier)}` : t("none"), true]);
+  b.slots.forEach(s=>{
+    let v;
+    if(isShield(s) && !slotOn(s)) v=t("gearOff");
+    else { v=kindName(slotKind(s)); if(isCloak(s)&&CLOAK[s.cloak]) v+=LANG==="en"||LANG==="ko"? ` (${cloakName(s.cloak)})` : `（${cloakName(s.cloak)}）`; }
+    rows.push([slotName(s), v, false]);
+  });
+  return rows;
+}
+function gearText(){
+  const sep = (LANG==="en"||LANG==="ko") ? ": " : "：";
+  return `${t("title")}　${B().name}\n`+gearRows().map(([k,v])=>`${k}${sep}${v}`).join("\n");
+}
+async function makeGearImage(){
+  try{ await document.fonts.ready; }catch(e){}
+  const b=B(), FONT='"Noto Sans TC","Noto Sans SC","Noto Sans KR","PingFang TC","Microsoft JhengHei",sans-serif';
+  const C={bg:cssv("--panel"),ink:cssv("--ink"),muted:cssv("--muted"),line:cssv("--line"),gold:cssv("--gold"),s:cssv("--set")};
+  const rows=gearRows(), cv=document.createElement("canvas"), x=cv.getContext("2d"), S2=2, PAD=28, RH=34;
+  const f=(w,sz)=>`${w} ${sz}px ${FONT}`;
+  x.font=f(500,15); let lw=0; rows.forEach(r=>{ lw=Math.max(lw,x.measureText(r[0]).width); });
+  x.font=f(700,16); let vw=0; rows.forEach(r=>{ vw=Math.max(vw,x.measureText(r[1]).width); });
+  x.font=f(900,21); const tw=x.measureText(`${t("gearH")}　${b.name}`).width;
+  lw=Math.ceil(lw); vw=Math.ceil(vw);
+  const GAP=30, W=Math.max(PAD*2+lw+GAP+vw, PAD*2+tw, 400), H=PAD+36+rows.length*RH+PAD+16;
+  cv.width=W*S2; cv.height=H*S2; x.scale(S2,S2);
+  x.fillStyle=C.bg; x.fillRect(0,0,W,H);
+  x.fillStyle=C.gold; x.fillRect(0,0,W,5);
+  x.textBaseline="alphabetic"; x.textAlign="left";
+  let y=PAD+24;
+  x.fillStyle=C.ink; x.font=f(900,21); x.fillText(`${t("gearH")}　${b.name}`,PAD,y);
+  y+=18;
+  rows.forEach((r,i)=>{
+    const ry=y+RH*i;
+    x.fillStyle=C.muted; x.font=f(500,15); x.fillText(r[0],PAD,ry+22);
+    x.fillStyle=r[2]?C.s:C.ink; x.font=f(700,16); x.fillText(r[1],PAD+lw+GAP,ry+22);
+    x.strokeStyle=r[2]?C.gold:C.line; x.lineWidth=r[2]?1.5:1;
+    x.beginPath(); x.moveTo(PAD,ry+RH-3); x.lineTo(W-PAD,ry+RH-3); x.stroke();
+  });
+  x.fillStyle=C.muted; x.font=f(400,11);
+  x.fillText(`${t("title")}　${new Date().toLocaleString(LOCALE[LANG])}`,PAD,H-PAD+12);
+  return await new Promise(res=>cv.toBlob(res,"image/png"));
+}
+const gearDlg=document.getElementById("gearDlg");
+document.getElementById("bGear").onclick=()=>{ $("#gearText").value=gearText(); $("#gearMsg").textContent=""; gearDlg.showModal(); };
+document.getElementById("gearClose").onclick=()=>gearDlg.close();
+document.getElementById("gearCopy").onclick=async()=>{
+  const ta=$("#gearText"); ta.select();
+  try{ await navigator.clipboard.writeText(ta.value); $("#gearMsg").textContent=t("copied"); }
+  catch(e){ try{ document.execCommand("copy"); $("#gearMsg").textContent=t("copied"); }catch(_){ $("#gearMsg").textContent=t("copyFail"); } }
+};
+document.getElementById("gearImg").onclick=async()=>{
+  const btn=document.getElementById("gearImg"); btn.disabled=true; btn.textContent=t("expBusy");
+  try{
+    const blob=await makeGearImage();
+    gearDlg.close();
+    await offerImage(blob,`${t("gearFile")}_${safeName(B().name)}.png`,t("gearH"));
+  } finally { btn.disabled=false; btn.textContent=t("dlImg"); }
+};
+
+function renderAll(){ applyStatic(); renderLang(); renderBuilds(); renderCls(); renderCrest(); renderSet(); renderSlots(); renderSummary(); }
+renderAll();
+</script>
+
+<!-- 使用次數統計：GoatCounter（qqaaa） -->
+<script data-goatcounter="https://qqaaa.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
