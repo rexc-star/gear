@@ -124,7 +124,7 @@ td.st{text-align:left;font-size:13px;font-weight:700}
 .sumhead h2{margin:0}
 .btnlink{background:var(--gold);color:#fff;border-radius:6px;padding:5px 12px;text-decoration:none}
 #imgDlg{width:min(900px,94vw)}
-#gearDlg textarea{height:210px;font-family:inherit;font-size:13.5px;line-height:1.7}
+#gearDlg textarea{height:230px;font-family:inherit;font-size:13.5px;line-height:1.7}
 .foot{font-size:12px;color:var(--muted);margin-top:10px}
 dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);width:min(560px,92vw)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -1079,46 +1079,56 @@ document.getElementById("bImg").onclick=async()=>{
 };
 document.getElementById("imgClose").onclick=()=>imgDlg.close();
 
-/* ---------- 匯出裝備（套裝名稱 + 各部位類型） ---------- */
+/* ---------- 匯出裝備（套裝 + 各部位屬性） ---------- */
+const par = x => (LANG==="en"||LANG==="ko") ? ` (${x})` : `（${x}）`;
+function slotStats(s){
+  const out=[];
+  s.lines.forEach(l=>{
+    if(l.type==="blue"){ out.push(S(E[l.id].stat)); return; }
+    if(l.type==="other"){ const n=(l.stat||"").trim(); if(n) out.push(n); return; }
+    out.push(S(l.stat));
+  });
+  return out;
+}
 function gearRows(){
-  const b=B(), rows=[];
+  const b=B(), rows=[], jn=(LANG==="en"||LANG==="ko")?", ":"、";
   const sj=JOB[b.setJob];
-  rows.push([t("gearSet"), (sj&&b.setTier)? `${jobName(b.setJob)} ${t("t"+b.setTier)}` : t("none"), true]);
+  rows.push({k:t("gearSet"), v:(sj&&b.setTier)? `${jobName(b.setJob)} ${t("t"+b.setTier)}` : t("none"), head:true});
   b.slots.forEach(s=>{
-    let v;
-    if(isShield(s) && !slotOn(s)) v=t("gearOff");
-    else { v=kindName(slotKind(s)); if(isCloak(s)&&CLOAK[s.cloak]) v+=LANG==="en"||LANG==="ko"? ` (${cloakName(s.cloak)})` : `（${cloakName(s.cloak)}）`; }
-    rows.push([slotName(s), v, false]);
+    if(isShield(s) && !slotOn(s)){ rows.push({k:slotName(s), v:t("gearOff"), off:true}); return; }
+    const st=slotStats(s);
+    rows.push({k:slotName(s), v: st.length? st.join(jn) : "—", off:!st.length});
   });
   return rows;
 }
 function gearText(){
-  const sep = (LANG==="en"||LANG==="ko") ? ": " : "：";
-  return `${t("title")}　${B().name}\n`+gearRows().map(([k,v])=>`${k}${sep}${v}`).join("\n");
+  const sep=(LANG==="en"||LANG==="ko")?": ":":";
+  return [`${t("gearH")}　${B().name}`].concat(gearRows().map(r=>`${r.k}${sep}${r.v}`)).join("\n");
 }
 async function makeGearImage(){
   try{ await document.fonts.ready; }catch(e){}
   const b=B(), FONT='"Noto Sans TC","Noto Sans SC","Noto Sans KR","PingFang TC","Microsoft JhengHei",sans-serif';
   const C={bg:cssv("--panel"),ink:cssv("--ink"),muted:cssv("--muted"),line:cssv("--line"),gold:cssv("--gold"),s:cssv("--set")};
-  const rows=gearRows(), cv=document.createElement("canvas"), x=cv.getContext("2d"), S2=2, PAD=28, RH=34;
+  const rows=gearRows(), cv=document.createElement("canvas"), x=cv.getContext("2d"), S2=2, PAD=28, RH=34, GAP=30;
   const f=(w,sz)=>`${w} ${sz}px ${FONT}`;
-  x.font=f(500,15); let lw=0; rows.forEach(r=>{ lw=Math.max(lw,x.measureText(r[0]).width); });
-  x.font=f(700,16); let vw=0; rows.forEach(r=>{ vw=Math.max(vw,x.measureText(r[1]).width); });
-  x.font=f(900,21); const tw=x.measureText(`${t("gearH")}　${b.name}`).width;
+  x.font=f(500,15); let lw=0; rows.forEach(r=>{ lw=Math.max(lw,x.measureText(r.k).width); });
+  x.font=f(700,16); let vw=0; rows.forEach(r=>{ vw=Math.max(vw,x.measureText(r.v).width); });
+  const title=`${t("gearH")}　${b.name}`;
+  x.font=f(900,21); const tw=x.measureText(title).width;
   lw=Math.ceil(lw); vw=Math.ceil(vw);
-  const GAP=30, W=Math.max(PAD*2+lw+GAP+vw, PAD*2+tw, 400), H=PAD+36+rows.length*RH+PAD+16;
+  const W=Math.max(PAD*2+lw+GAP+vw, PAD*2+tw, 400), H=PAD+36+rows.length*RH+PAD+16;
   cv.width=W*S2; cv.height=H*S2; x.scale(S2,S2);
   x.fillStyle=C.bg; x.fillRect(0,0,W,H);
   x.fillStyle=C.gold; x.fillRect(0,0,W,5);
   x.textBaseline="alphabetic"; x.textAlign="left";
   let y=PAD+24;
-  x.fillStyle=C.ink; x.font=f(900,21); x.fillText(`${t("gearH")}　${b.name}`,PAD,y);
+  x.fillStyle=C.ink; x.font=f(900,21); x.fillText(title,PAD,y);
   y+=18;
   rows.forEach((r,i)=>{
     const ry=y+RH*i;
-    x.fillStyle=C.muted; x.font=f(500,15); x.fillText(r[0],PAD,ry+22);
-    x.fillStyle=r[2]?C.s:C.ink; x.font=f(700,16); x.fillText(r[1],PAD+lw+GAP,ry+22);
-    x.strokeStyle=r[2]?C.gold:C.line; x.lineWidth=r[2]?1.5:1;
+    x.fillStyle=C.muted; x.font=f(500,15); x.fillText(r.k,PAD,ry+22);
+    x.fillStyle=r.head?C.s:(r.off?C.muted:C.ink); x.font=f(700,16); x.fillText(r.v,PAD+lw+GAP,ry+22);
+    x.strokeStyle=r.head?C.gold:C.line; x.lineWidth=r.head?1.5:1;
     x.beginPath(); x.moveTo(PAD,ry+RH-3); x.lineTo(W-PAD,ry+RH-3); x.stroke();
   });
   x.fillStyle=C.muted; x.font=f(400,11);
